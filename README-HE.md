@@ -9,37 +9,37 @@
 </details>
 
 <details>
-<summary>Pretty JSON</summary>
+<summary>Pretty JSON with encryption information</summary>
 
-`json 
+```json
 {
     "evidence": {
-        "id": "744f2c60-ebe1-484b-a33e-9fd5609b47cc",
+        "id": "744f2c60-ebe1-484b-a33e-9fd5609b47cc", -> encrypted?
         "timestamp": "2026-09-22T12:06:17.215737Z",
-        "targetOfEvaluationId": "6d4f7c9c-fa41-4fe3-a5d7-a6e165c3e0d8",
-        "toolId": "app.telemetry evidence collector",
+        "targetOfEvaluationId": "6d4f7c9c-fa41-4fe3-a5d7-a6e165c3e0d8", -> encrypted?
+        "toolId": "app.telemetry evidence collector", -> encrypted?
         "resource": {
             "machineLearningModel": {
-                "adversarialRobustnessScore": 42.42,
+                "id": "dummy", -> encrypted
+                "name": "dummy", -> encrypted
                 "creationTime": "2026-10-30T10:37:23.565266Z",
-                "description": "dummy",
-                "evasionEfficacyLevel": 42.42,
-                "explainability": 42.42,
-                "explainabilityEnabled": true,
-                "id": "dummy",
+                "description": "dummy", -> encrypted
+                "parentId": "xxx", -> encrypted
+                "raw": "dummy", -> encrypted
                 "labels": {
                     "key1": "value1",
                     "key2": "value2"
                 },
-                "membershipInferenceResilience": 42.42,
-                "modelStealResilience": 42.42,
-                "name": "dummy",
-                "poisonedDataLevel": 42.42,
-                "poisoningResilienceLevel": 42.42,
-                "raw": "dummy",
-                "dataLocation": {},
-                "parentId": "",
-                "vulnerabilities": [
+                "adversarialRobustnessScore": 42.42, -> encrypted
+                "evasionEfficacyLevel": 42.42, -> encrypted
+                "explainability": 42.42, -> encrypted
+                "explainabilityEnabled": true, -> encrypted
+                "membershipInferenceResilience": 42.42, -> encrypted
+                "modelStealResilience": 42.42, -> encrypted
+                "poisonedDataLevel": 42.42, -> encrypted
+                "poisoningResilienceLevel": 42.42, -> encrypted
+                "dataLocation": {}, -> encrypted
+                "vulnerabilities": [ -> encrypted?
                     {
                         "criticality": "dummy",
                         "cve": "dummy",
@@ -67,7 +67,7 @@
         }
     }
 }
-`
+```
 
 </details>
 
@@ -93,17 +93,5 @@ grpcurl --plaintext -d '{"evidence":{"id":"744f2c60-ebe1-484b-a33e-9fd5609b47cc"
 - MembershipInferenceResilience (febb8eae-2dd0-4e08-9428-2f1c00616f86)
 
 # Rego Input (Evidence)
-```json
-{
-  "id": "khdslfnsdlfnsd", -> encrypted
-  "labels": [],
-  "name": "lsjdfknsdjsdlfi", -> encrypted
-  "poisonedDataLevel": X, -> encrypted
-  "type": [
-    "MachineLearningModel",
-    "MachineLearning",
-    "Data",
-    "Resource"
-  ]
-}
-```
+
+
