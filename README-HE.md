@@ -93,7 +93,7 @@ grpcurl --plaintext -d '{"evidence":{"id":"744f2c60-ebe1-484b-a33e-9fd5609b47cc"
 - MembershipInferenceResilience (febb8eae-2dd0-4e08-9428-2f1c00616f86)
 
 # Rego Input (Evidence)
-`
+```json
 {
   "id": "khdslfnsdlfnsd", -> encrypted
   "labels": [],
@@ -106,4 +106,4 @@ grpcurl --plaintext -d '{"evidence":{"id":"744f2c60-ebe1-484b-a33e-9fd5609b47cc"
     "Resource"
   ]
 }
-`
+```
