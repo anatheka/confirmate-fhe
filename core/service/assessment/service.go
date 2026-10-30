@@ -428,7 +428,14 @@ func (svc *Service) handleEvidence(
 		slog.Any("Timestamp", ev.Timestamp.AsTime()),
 	)
 
-	evaluations, err = svc.pe.Eval(ctx, ev, resource, related, svc)
+	// Check if FHE is enabled and call the appropriate evaluation method
+	if svc.cfg.FheEnabled {
+		evaluations, err = svc.pe.Eval(ctx, ev, resource, related, svc)
+
+	} else {
+		evaluations, err = svc.pe.Eval(ctx, ev, resource, related, svc)
+	}
+
 	if err != nil {
 		newError = fmt.Errorf("could not evaluate evidence: %w", err)
 
