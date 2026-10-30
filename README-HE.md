@@ -1,9 +1,78 @@
 # Example Evidence for `MachineLearningModel`
-`
+<details>
+<summary>Minify JSON</summary>
+```json
 {"evidence":{"id":"744f2c60-ebe1-484b-a33e-9fd5609b47cc","timestamp":"2026-09-22T12:06:17.215737Z","targetOfEvaluationId":"6d4f7c9c-fa41-4fe3-a5d7-a6e165c3e0d8","toolId":"app.telemetry evidence collector","resource":{"machineLearningModel":{"adversarialRobustnessScore":42.42,"creationTime":"2026-10-30T10:37:23.565266Z","description":"dummy","evasionEfficacyLevel":42.42,"explainability":42.42,"explainabilityEnabled":true,"id":"dummy","labels":{"key1":"value1","key2":"value2"},"membershipInferenceResilience":42.42,"modelStealResilience":42.42,"name":"dummy","poisonedDataLevel":42.42,"poisoningResilienceLevel":42.42,"raw":"dummy","dataLocation":{},"parentId":"","vulnerabilities":[{"criticality":"dummy","cve":"dummy","cwe":["dummy1","dummy2"],"description":"dummy","exploitable":true,"url":"dummy"},{"criticality":"dummy","cve":"dummy","cwe":["dummy1","dummy2"],"description":"dummy","exploitable":true,"url":"dummy"}]}}}}
-`
+```
+</details>
 
-grpc call: `grpcurl --plaintext -d '{"evidence":{"id":"744f2c60-ebe1-484b-a33e-9fd5609b47cc","timestamp":"2026-09-22T12:06:17.215737Z","targetOfEvaluationId":"6d4f7c9c-fa41-4fe3-a5d7-a6e165c3e0d8","toolId":"app.telemetry evidence collector","resource":{"machineLearningModel":{"adversarialRobustnessScore":42.42,"creationTime":"2026-10-30T10:37:23.565266Z","description":"dummy","evasionEfficacyLevel":42.42,"explainability":42.42,"explainabilityEnabled":true,"id":"dummy","labels":{"key1":"value1","key2":"value2"},"membershipInferenceResilience":42.42,"modelStealResilience":42.42,"name":"dummy","poisonedDataLevel":42.42,"poisoningResilienceLevel":42.42,"raw":"dummy","dataLocation":{},"parentId":"","vulnerabilities":[{"criticality":"dummy","cve":"dummy","cwe":["dummy1","dummy2"],"description":"dummy","exploitable":true,"url":"dummy"},{"criticality":"dummy","cve":"dummy","cwe":["dummy1","dummy2"],"description":"dummy","exploitable":true,"url":"dummy"}]}}}}'  -H "authorization: Bearer $TOKEN" $DEST confirmate.evidence.v1.EvidenceStore.StoreEvidence`
+<details>
+<summary>Pretty JSON</summary>
+```json
+{
+    "evidence": {
+        "id": "744f2c60-ebe1-484b-a33e-9fd5609b47cc",
+        "timestamp": "2026-09-22T12:06:17.215737Z",
+        "targetOfEvaluationId": "6d4f7c9c-fa41-4fe3-a5d7-a6e165c3e0d8",
+        "toolId": "app.telemetry evidence collector",
+        "resource": {
+            "machineLearningModel": {
+                "adversarialRobustnessScore": 42.42,
+                "creationTime": "2026-10-30T10:37:23.565266Z",
+                "description": "dummy",
+                "evasionEfficacyLevel": 42.42,
+                "explainability": 42.42,
+                "explainabilityEnabled": true,
+                "id": "dummy",
+                "labels": {
+                    "key1": "value1",
+                    "key2": "value2"
+                },
+                "membershipInferenceResilience": 42.42,
+                "modelStealResilience": 42.42,
+                "name": "dummy",
+                "poisonedDataLevel": 42.42,
+                "poisoningResilienceLevel": 42.42,
+                "raw": "dummy",
+                "dataLocation": {},
+                "parentId": "",
+                "vulnerabilities": [
+                    {
+                        "criticality": "dummy",
+                        "cve": "dummy",
+                        "cwe": [
+                            "dummy1",
+                            "dummy2"
+                        ],
+                        "description": "dummy",
+                        "exploitable": true,
+                        "url": "dummy"
+                    },
+                    {
+                        "criticality": "dummy",
+                        "cve": "dummy",
+                        "cwe": [
+                            "dummy1",
+                            "dummy2"
+                        ],
+                        "description": "dummy",
+                        "exploitable": true,
+                        "url": "dummy"
+                    }
+                ]
+            }
+        }
+    }
+}
+```
+</details>
+
+<details>
+<summary>grpcurl example</summary>
+```json 
+grpcurl --plaintext -d '{"evidence":{"id":"744f2c60-ebe1-484b-a33e-9fd5609b47cc","timestamp":"2026-09-22T12:06:17.215737Z","targetOfEvaluationId":"6d4f7c9c-fa41-4fe3-a5d7-a6e165c3e0d8","toolId":"app.telemetry evidence collector","resource":{"machineLearningModel":{"adversarialRobustnessScore":42.42,"creationTime":"2026-10-30T10:37:23.565266Z","description":"dummy","evasionEfficacyLevel":42.42,"explainability":42.42,"explainabilityEnabled":true,"id":"dummy","labels":{"key1":"value1","key2":"value2"},"membershipInferenceResilience":42.42,"modelStealResilience":42.42,"name":"dummy","poisonedDataLevel":42.42,"poisoningResilienceLevel":42.42,"raw":"dummy","dataLocation":{},"parentId":"","vulnerabilities":[{"criticality":"dummy","cve":"dummy","cwe":["dummy1","dummy2"],"description":"dummy","exploitable":true,"url":"dummy"},{"criticality":"dummy","cve":"dummy","cwe":["dummy1","dummy2"],"description":"dummy","exploitable":true,"url":"dummy"}]}}}}'  -H "authorization: Bearer $TOKEN" $DEST confirmate.evidence.v1.EvidenceStore.StoreEvidence
+```
+</details>
 
 # Metrics for `MachineLearningModel`
 - EvasionAttackEfficacy (62af69a7-8113-49a1-b98a-715b6ec0e6e6)
