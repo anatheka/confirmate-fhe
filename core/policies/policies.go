@@ -44,6 +44,7 @@ type PolicyEval interface {
 	// unwrapping, the callee of this function needs to supply the unwrapped ontology resource, since they most likely
 	// unwrapped the resource already, e.g. to check for validation.
 	Eval(ctx context.Context, evidence *evidence.Evidence, r ontology.IsResource, related map[string]ontology.IsResource, src MetricsSource) (data []*CombinedResult, err error)
+	EvalHE(ctx context.Context, evidence *evidence.Evidence, r ontology.IsResource, related map[string]ontology.IsResource, src MetricsSource) (data []*CombinedResult, err error)
 }
 
 type CombinedResult struct {

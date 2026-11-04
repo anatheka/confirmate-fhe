@@ -430,7 +430,7 @@ func (svc *Service) handleEvidence(
 
 	// Check if FHE is enabled and call the appropriate evaluation method
 	if svc.cfg.FheEnabled {
-		evaluations, err = svc.pe.Eval(ctx, ev, resource, related, svc)
+		evaluations, err = svc.pe.EvalHE(ctx, ev, resource, related, svc)
 
 	} else {
 		evaluations, err = svc.pe.Eval(ctx, ev, resource, related, svc)

@@ -92,6 +92,4 @@ grpcurl --plaintext -d '{"evidence":{"id":"744f2c60-ebe1-484b-a33e-9fd5609b47cc"
 - VulnerabilitiesNotExploitable (e0f1b6f2-13f5-482e-924e-c9e29145d7e5)
 - MembershipInferenceResilience (febb8eae-2dd0-4e08-9428-2f1c00616f86)
 
-# Rego Input (Evidence)
-
 
