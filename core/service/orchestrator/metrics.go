@@ -370,6 +370,25 @@ func (svc *Service) GetMetricConfiguration(
 		return nil, err
 	}
 
+	// If default_only is set, skip the DB lookup and return the default
+	// configuration directly. This is used e.g. by the FHE path to retrieve
+	// pre-encryptable default target values.
+	if req.Msg.DefaultOnly {
+		if defaultConfig, ok := defaultMetricConfigurations[req.Msg.MetricId]; ok {
+			config = assessment.MetricConfiguration{
+				Operator:             defaultConfig.Operator,
+				TargetValue:          defaultConfig.TargetValue,
+				IsDefault:            true,
+				MetricId:             req.Msg.MetricId,
+				TargetOfEvaluationId: req.Msg.TargetOfEvaluationId,
+			}
+			res = connect.NewResponse(&config)
+			return res, nil
+		}
+
+		return nil, service.HandleDatabaseError(persistence.ErrRecordNotFound, service.ErrNotFound("default metric configuration"))
+	}
+
 	// Use WithoutPreload because MetricConfiguration contains structpb.Value which has unexported fields
 	err = svc.db.Get(&config, persistence.WithoutPreload(), "target_of_evaluation_id = ? AND metric_id = ?",
 		req.Msg.TargetOfEvaluationId, req.Msg.MetricId)

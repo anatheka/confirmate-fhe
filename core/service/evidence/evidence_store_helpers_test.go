@@ -100,6 +100,10 @@ func (nilAssessmentClient) AssessEvidences(context.Context) *connect.BidiStreamF
 	return nil
 }
 
+func (nilAssessmentClient) AssessEncryptedEvidence(context.Context, *connect.Request[assessment.AssessEncryptedEvidenceRequest]) (*connect.Response[assessment.AssessEncryptedEvidenceResponse], error) {
+	return nil, errors.New("not implemented")
+}
+
 // fakeReceive describes the next Receive result for a fake stream.
 type fakeReceive struct {
 	req *evidence.StoreEvidenceRequest

@@ -5,7 +5,7 @@ openapi: 3.0.3
 info:
     title: Orchestrator API
     description: Manages the orchestration of components within the confirmate architecture
-    version: core/v0.3.0-32-gba5341e2
+    version: 
 paths:
     /v1/orchestrator/assessment_results:
         get:
@@ -1829,6 +1829,14 @@ paths:
                   required: true
                   schema:
                     type: string
+                - name: defaultOnly
+                  in: query
+                  description: |-
+                    If true, returns the default metric configuration (is_default = true)
+                     regardless of the target_of_evaluation_id. Used e.g. by the FHE path to
+                     retrieve pre-encryptable default target values.
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK

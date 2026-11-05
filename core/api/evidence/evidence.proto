@@ -20,6 +20,7 @@ import "policies/security-metrics/ontology/v1/ontology.proto";
 import "buf/validate/validate.proto";
 import "google/api/field_behavior.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "tagger/tagger.proto";
 
@@ -80,6 +81,42 @@ message Evidence {
   // assessment and are recent enough. In the future, this will be replaced with information in the "related" edges in
   // the resource. For now, this needs to be set manually in the evidence.
   repeated string experimental_related_resource_ids = 999 [(tagger.tags) = "gorm:\"serializer:json\""];
+}
+
+// EvidenceEncrypted is an overlay of [Evidence] used in the FHE (Fully
+// Homomorphic Encryption) path. It carries the same structural metadata as
+// Evidence in plaintext, but sensitive resource field values are replaced by
+// FHE ciphertext strings. The resource is represented as a
+// google.protobuf.Struct that mirrors the ontology resource structure, e.g.
+// {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
+message EvidenceEncrypted {
+  // The ID of the evidence.
+  string id = 1 [(buf.validate.field).string.uuid = true];
+
+  // Time of evidence creation (plaintext, for temporal ordering).
+  google.protobuf.Timestamp timestamp = 2 [(buf.validate.field).required = true];
+
+  // Reference to a target of evaluation (plaintext, needed for metric
+  // configuration lookup).
+  string target_of_evaluation_id = 3 [(buf.validate.field).string.uuid = true];
+
+  // Reference to the tool which provided the evidence (plaintext, needed for
+  // metric applicability).
+  string tool_id = 4 [(buf.validate.field).string.min_len = 1];
+
+  // The encrypted resource as a Struct that mirrors the ontology resource
+  // structure. Sensitive field values are replaced by base64-encoded FHE
+  // ciphertext strings.
+  google.protobuf.Struct resource = 5;
+
+  // The resource types (plaintext, for metric applicability checks).
+  repeated string resource_types = 6 [(buf.validate.field).repeated.min_items = 1];
+
+  // The resource ID (plaintext, for reference in assessment results).
+  string resource_id = 7 [(buf.validate.field).string.min_len = 1];
+
+  // Related resource IDs (plaintext, for dependency resolution).
+  repeated string experimental_related_resource_ids = 999;
 }
 
 // ResourceSnapshot is the persisted representation of a cloud resource.

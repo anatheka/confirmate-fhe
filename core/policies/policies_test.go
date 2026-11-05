@@ -275,6 +275,11 @@ func (m *mockPolicyEval) Eval(ctx context.Context, evidence *evidence.Evidence, 
 	return m.results, m.err
 }
 
+// EvalHE returns pre-configured results for the FHE path
+func (m *mockPolicyEval) EvalHE(ctx context.Context, evidence *evidence.EvidenceEncrypted, src MetricsSource) ([]*CombinedResult, error) {
+	return m.results, m.err
+}
+
 // HandleMetricEvent handles metric change events
 func (m *mockPolicyEval) HandleMetricEvent(event *orchestrator.ChangeEvent) error {
 	return m.err

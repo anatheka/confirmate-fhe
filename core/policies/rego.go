@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strings"
 	"sync"
 
@@ -83,6 +84,14 @@ type regoEval struct {
 	// legitimately differ in which metrics apply to it. Disabled by default; enable only if the
 	// discovery overhead matters more than that risk for your metric set.
 	cacheApplicableMetrics bool
+
+	// fheAddress is the address of the FHE proxy service, used by the fhe_compare
+	// built-in to perform homomorphic comparisons.
+	fheAddress string
+
+	// fheHTTPClient is the HTTP client used for communication with the FHE proxy
+	// service.
+	fheHTTPClient *http.Client
 }
 
 type queryCache struct {
@@ -122,6 +131,22 @@ func WithSkipMetricOnError(skip bool) RegoEvalOption {
 func WithApplicableMetricsCache(enabled bool) RegoEvalOption {
 	return func(re *regoEval) {
 		re.cacheApplicableMetrics = enabled
+	}
+}
+
+// WithFHEAddress is an option to configure the FHE proxy address used by the
+// fhe_compare built-in for homomorphic comparisons.
+func WithFHEAddress(addr string) RegoEvalOption {
+	return func(re *regoEval) {
+		re.fheAddress = addr
+	}
+}
+
+// WithFHEHTTPClient is an option to configure the HTTP client used for
+// communication with the FHE proxy service.
+func WithFHEHTTPClient(client *http.Client) RegoEvalOption {
+	return func(re *regoEval) {
+		re.fheHTTPClient = client
 	}
 }
 

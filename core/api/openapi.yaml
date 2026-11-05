@@ -6,6 +6,33 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /v1/assessment/encrypted_evidences:
+        post:
+            tags:
+                - Assessment
+            description: |-
+                Assesses encrypted evidence sent by the FHE proxy. Part of the public API,
+                 also exposed as REST.
+            operationId: Assessment_AssessEncryptedEvidence
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EvidenceEncrypted'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AssessEncryptedEvidenceResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /v1/assessment/evidences:
         post:
             tags:
@@ -2240,6 +2267,14 @@ paths:
                   required: true
                   schema:
                     type: string
+                - name: defaultOnly
+                  in: query
+                  description: |-
+                    If true, returns the default metric configuration (is_default = true)
+                     regardless of the target_of_evaluation_id. Used e.g. by the FHE path to
+                     retrieve pre-encryptable default target values.
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK
@@ -3055,6 +3090,21 @@ components:
                     items:
                         type: string
             description: ApplicationLogging is an entity class in our ontology. It can be instantiated and contains all of its properties as well of its implemented interfaces.
+        AssessEncryptedEvidenceResponse:
+            type: object
+            properties:
+                status:
+                    enum:
+                        - ASSESSMENT_STATUS_UNSPECIFIED
+                        - ASSESSMENT_STATUS_WAITING_FOR_RELATED
+                        - ASSESSMENT_STATUS_ASSESSED
+                        - ASSESSMENT_STATUS_FAILED
+                    type: string
+                    format: enum
+            description: |-
+                AssessEncryptedEvidenceResponse belongs to AssessEncryptedEvidence, which uses
+                 a custom unary RPC and therefore requires a response message according to
+                 the style convention.
         AssessEvidenceResponse:
             type: object
             properties:
@@ -5321,6 +5371,52 @@ components:
                          assessment and are recent enough. In the future, this will be replaced with information in the "related" edges in
                          the resource. For now, this needs to be set manually in the evidence.
             description: An evidence resource
+        EvidenceEncrypted:
+            type: object
+            properties:
+                id:
+                    type: string
+                    description: The ID of the evidence.
+                timestamp:
+                    type: string
+                    description: Time of evidence creation (plaintext, for temporal ordering).
+                    format: date-time
+                targetOfEvaluationId:
+                    type: string
+                    description: |-
+                        Reference to a target of evaluation (plaintext, needed for metric
+                         configuration lookup).
+                toolId:
+                    type: string
+                    description: |-
+                        Reference to the tool which provided the evidence (plaintext, needed for
+                         metric applicability).
+                resource:
+                    type: object
+                    description: |-
+                        The encrypted resource as a Struct that mirrors the ontology resource
+                         structure. Sensitive field values are replaced by base64-encoded FHE
+                         ciphertext strings.
+                resourceTypes:
+                    type: array
+                    items:
+                        type: string
+                    description: The resource types (plaintext, for metric applicability checks).
+                resourceId:
+                    type: string
+                    description: The resource ID (plaintext, for reference in assessment results).
+                experimentalRelatedResourceIds:
+                    type: array
+                    items:
+                        type: string
+                    description: Related resource IDs (plaintext, for dependency resolution).
+            description: |-
+                EvidenceEncrypted is an overlay of [Evidence] used in the FHE (Fully
+                 Homomorphic Encryption) path. It carries the same structural metadata as
+                 Evidence in plaintext, but sensitive resource field values are replaced by
+                 FHE ciphertext strings. The resource is represented as a
+                 google.protobuf.Struct that mirrors the ontology resource structure, e.g.
+                 {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
         ExitBoundaryOperation:
             type: object
             properties:

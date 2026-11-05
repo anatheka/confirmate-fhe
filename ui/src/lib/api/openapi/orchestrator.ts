@@ -3668,7 +3668,14 @@ export interface operations {
     };
     Orchestrator_GetMetricConfiguration: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description If true, returns the default metric configuration (is_default = true)
+                 *      regardless of the target_of_evaluation_id. Used e.g. by the FHE path to
+                 *      retrieve pre-encryptable default target values.
+                 */
+                defaultOnly?: boolean;
+            };
             header?: never;
             path: {
                 targetOfEvaluationId: string;

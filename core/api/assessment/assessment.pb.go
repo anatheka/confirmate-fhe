@@ -305,6 +305,99 @@ func (x *AssessEvidencesResponse) GetStatusMessage() string {
 	return ""
 }
 
+// AssessEncryptedEvidenceRequest carries encrypted evidence from the FHE proxy
+// for assessment in the FHE (Fully Homomorphic Encryption) path.
+type AssessEncryptedEvidenceRequest struct {
+	state         protoimpl.MessageState      `protogen:"open.v1"`
+	Evidence      *evidence.EvidenceEncrypted `protobuf:"bytes,1,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssessEncryptedEvidenceRequest) Reset() {
+	*x = AssessEncryptedEvidenceRequest{}
+	mi := &file_api_assessment_assessment_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssessEncryptedEvidenceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssessEncryptedEvidenceRequest) ProtoMessage() {}
+
+func (x *AssessEncryptedEvidenceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_assessment_assessment_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssessEncryptedEvidenceRequest.ProtoReflect.Descriptor instead.
+func (*AssessEncryptedEvidenceRequest) Descriptor() ([]byte, []int) {
+	return file_api_assessment_assessment_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *AssessEncryptedEvidenceRequest) GetEvidence() *evidence.EvidenceEncrypted {
+	if x != nil {
+		return x.Evidence
+	}
+	return nil
+}
+
+// AssessEncryptedEvidenceResponse belongs to AssessEncryptedEvidence, which uses
+// a custom unary RPC and therefore requires a response message according to
+// the style convention.
+type AssessEncryptedEvidenceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        AssessmentStatus       `protobuf:"varint,1,opt,name=status,proto3,enum=confirmate.assessment.v1.AssessmentStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssessEncryptedEvidenceResponse) Reset() {
+	*x = AssessEncryptedEvidenceResponse{}
+	mi := &file_api_assessment_assessment_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssessEncryptedEvidenceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssessEncryptedEvidenceResponse) ProtoMessage() {}
+
+func (x *AssessEncryptedEvidenceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_assessment_assessment_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssessEncryptedEvidenceResponse.ProtoReflect.Descriptor instead.
+func (*AssessEncryptedEvidenceResponse) Descriptor() ([]byte, []int) {
+	return file_api_assessment_assessment_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *AssessEncryptedEvidenceResponse) GetStatus() AssessmentStatus {
+	if x != nil {
+		return x.Status
+	}
+	return AssessmentStatus_ASSESSMENT_STATUS_UNSPECIFIED
+}
+
 var File_api_assessment_assessment_proto protoreflect.FileDescriptor
 
 const file_api_assessment_assessment_proto_rawDesc = "" +
@@ -321,12 +414,17 @@ const file_api_assessment_assessment_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\x0e2*.confirmate.assessment.v1.AssessmentStatusR\x06status\"\x84\x01\n" +
 	"\x17AssessEvidencesResponse\x12B\n" +
 	"\x06status\x18\x01 \x01(\x0e2*.confirmate.assessment.v1.AssessmentStatusR\x06status\x12%\n" +
-	"\x0estatus_message\x18\x02 \x01(\tR\rstatusMessage2\x92\x03\n" +
+	"\x0estatus_message\x18\x02 \x01(\tR\rstatusMessage\"o\n" +
+	"\x1eAssessEncryptedEvidenceRequest\x12M\n" +
+	"\bevidence\x18\x01 \x01(\v2).confirmate.evidence.v1.EvidenceEncryptedB\x06\xbaH\x03\xc8\x01\x01R\bevidence\"e\n" +
+	"\x1fAssessEncryptedEvidenceResponse\x12B\n" +
+	"\x06status\x18\x01 \x01(\x0e2*.confirmate.assessment.v1.AssessmentStatusR\x06status2\xd9\x04\n" +
 	"\n" +
 	"Assessment\x12e\n" +
 	"\x13CalculateCompliance\x124.confirmate.assessment.v1.CalculateComplianceRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x9f\x01\n" +
 	"\x0eAssessEvidence\x12/.confirmate.assessment.v1.AssessEvidenceRequest\x1a0.confirmate.assessment.v1.AssessEvidenceResponse\"*\x82\xd3\xe4\x93\x02$:\bevidence\"\x18/v1/assessment/evidences\x12{\n" +
-	"\x0fAssessEvidences\x12/.confirmate.assessment.v1.AssessEvidenceRequest\x1a1.confirmate.assessment.v1.AssessEvidencesResponse\"\x00(\x010\x01B#Z!confirmate.io/core/api/assessmentb\x06proto3"
+	"\x0fAssessEvidences\x12/.confirmate.assessment.v1.AssessEvidenceRequest\x1a1.confirmate.assessment.v1.AssessEvidencesResponse\"\x00(\x010\x01\x12\xc4\x01\n" +
+	"\x17AssessEncryptedEvidence\x128.confirmate.assessment.v1.AssessEncryptedEvidenceRequest\x1a9.confirmate.assessment.v1.AssessEncryptedEvidenceResponse\"4\x82\xd3\xe4\x93\x02.:\bevidence\"\"/v1/assessment/encrypted_evidencesB#Z!confirmate.io/core/api/assessmentb\x06proto3"
 
 var (
 	file_api_assessment_assessment_proto_rawDescOnce sync.Once
@@ -340,33 +438,40 @@ func file_api_assessment_assessment_proto_rawDescGZIP() []byte {
 	return file_api_assessment_assessment_proto_rawDescData
 }
 
-var file_api_assessment_assessment_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_api_assessment_assessment_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_api_assessment_assessment_proto_goTypes = []any{
-	(*ConfigureAssessmentRequest)(nil),  // 0: confirmate.assessment.v1.ConfigureAssessmentRequest
-	(*ConfigureAssessmentResponse)(nil), // 1: confirmate.assessment.v1.ConfigureAssessmentResponse
-	(*CalculateComplianceRequest)(nil),  // 2: confirmate.assessment.v1.CalculateComplianceRequest
-	(*AssessEvidenceRequest)(nil),       // 3: confirmate.assessment.v1.AssessEvidenceRequest
-	(*AssessEvidenceResponse)(nil),      // 4: confirmate.assessment.v1.AssessEvidenceResponse
-	(*AssessEvidencesResponse)(nil),     // 5: confirmate.assessment.v1.AssessEvidencesResponse
-	(*evidence.Evidence)(nil),           // 6: confirmate.evidence.v1.Evidence
-	(AssessmentStatus)(0),               // 7: confirmate.assessment.v1.AssessmentStatus
-	(*emptypb.Empty)(nil),               // 8: google.protobuf.Empty
+	(*ConfigureAssessmentRequest)(nil),      // 0: confirmate.assessment.v1.ConfigureAssessmentRequest
+	(*ConfigureAssessmentResponse)(nil),     // 1: confirmate.assessment.v1.ConfigureAssessmentResponse
+	(*CalculateComplianceRequest)(nil),      // 2: confirmate.assessment.v1.CalculateComplianceRequest
+	(*AssessEvidenceRequest)(nil),           // 3: confirmate.assessment.v1.AssessEvidenceRequest
+	(*AssessEvidenceResponse)(nil),          // 4: confirmate.assessment.v1.AssessEvidenceResponse
+	(*AssessEvidencesResponse)(nil),         // 5: confirmate.assessment.v1.AssessEvidencesResponse
+	(*AssessEncryptedEvidenceRequest)(nil),  // 6: confirmate.assessment.v1.AssessEncryptedEvidenceRequest
+	(*AssessEncryptedEvidenceResponse)(nil), // 7: confirmate.assessment.v1.AssessEncryptedEvidenceResponse
+	(*evidence.Evidence)(nil),               // 8: confirmate.evidence.v1.Evidence
+	(AssessmentStatus)(0),                   // 9: confirmate.assessment.v1.AssessmentStatus
+	(*evidence.EvidenceEncrypted)(nil),      // 10: confirmate.evidence.v1.EvidenceEncrypted
+	(*emptypb.Empty)(nil),                   // 11: google.protobuf.Empty
 }
 var file_api_assessment_assessment_proto_depIdxs = []int32{
-	6, // 0: confirmate.assessment.v1.AssessEvidenceRequest.evidence:type_name -> confirmate.evidence.v1.Evidence
-	7, // 1: confirmate.assessment.v1.AssessEvidenceResponse.status:type_name -> confirmate.assessment.v1.AssessmentStatus
-	7, // 2: confirmate.assessment.v1.AssessEvidencesResponse.status:type_name -> confirmate.assessment.v1.AssessmentStatus
-	2, // 3: confirmate.assessment.v1.Assessment.CalculateCompliance:input_type -> confirmate.assessment.v1.CalculateComplianceRequest
-	3, // 4: confirmate.assessment.v1.Assessment.AssessEvidence:input_type -> confirmate.assessment.v1.AssessEvidenceRequest
-	3, // 5: confirmate.assessment.v1.Assessment.AssessEvidences:input_type -> confirmate.assessment.v1.AssessEvidenceRequest
-	8, // 6: confirmate.assessment.v1.Assessment.CalculateCompliance:output_type -> google.protobuf.Empty
-	4, // 7: confirmate.assessment.v1.Assessment.AssessEvidence:output_type -> confirmate.assessment.v1.AssessEvidenceResponse
-	5, // 8: confirmate.assessment.v1.Assessment.AssessEvidences:output_type -> confirmate.assessment.v1.AssessEvidencesResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	8,  // 0: confirmate.assessment.v1.AssessEvidenceRequest.evidence:type_name -> confirmate.evidence.v1.Evidence
+	9,  // 1: confirmate.assessment.v1.AssessEvidenceResponse.status:type_name -> confirmate.assessment.v1.AssessmentStatus
+	9,  // 2: confirmate.assessment.v1.AssessEvidencesResponse.status:type_name -> confirmate.assessment.v1.AssessmentStatus
+	10, // 3: confirmate.assessment.v1.AssessEncryptedEvidenceRequest.evidence:type_name -> confirmate.evidence.v1.EvidenceEncrypted
+	9,  // 4: confirmate.assessment.v1.AssessEncryptedEvidenceResponse.status:type_name -> confirmate.assessment.v1.AssessmentStatus
+	2,  // 5: confirmate.assessment.v1.Assessment.CalculateCompliance:input_type -> confirmate.assessment.v1.CalculateComplianceRequest
+	3,  // 6: confirmate.assessment.v1.Assessment.AssessEvidence:input_type -> confirmate.assessment.v1.AssessEvidenceRequest
+	3,  // 7: confirmate.assessment.v1.Assessment.AssessEvidences:input_type -> confirmate.assessment.v1.AssessEvidenceRequest
+	6,  // 8: confirmate.assessment.v1.Assessment.AssessEncryptedEvidence:input_type -> confirmate.assessment.v1.AssessEncryptedEvidenceRequest
+	11, // 9: confirmate.assessment.v1.Assessment.CalculateCompliance:output_type -> google.protobuf.Empty
+	4,  // 10: confirmate.assessment.v1.Assessment.AssessEvidence:output_type -> confirmate.assessment.v1.AssessEvidenceResponse
+	5,  // 11: confirmate.assessment.v1.Assessment.AssessEvidences:output_type -> confirmate.assessment.v1.AssessEvidencesResponse
+	7,  // 12: confirmate.assessment.v1.Assessment.AssessEncryptedEvidence:output_type -> confirmate.assessment.v1.AssessEncryptedEvidenceResponse
+	9,  // [9:13] is the sub-list for method output_type
+	5,  // [5:9] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_api_assessment_assessment_proto_init() }
@@ -382,7 +487,7 @@ func file_api_assessment_assessment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_assessment_assessment_proto_rawDesc), len(file_api_assessment_assessment_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
