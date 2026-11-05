@@ -16,12 +16,12 @@ syntax = "proto3";
 
 package confirmate.evidence.v1;
 
-import "policies/security-metrics/ontology/v1/ontology.proto";
 import "buf/validate/validate.proto";
-import "google/api/field_behavior.proto";
 import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
+import "policies/security-metrics/ontology/v1/ontology.proto";
 import "tagger/tagger.proto";
 
 option go_package = "confirmate.io/core/api/evidence";
@@ -90,18 +90,16 @@ message Evidence {
 // google.protobuf.Struct that mirrors the ontology resource structure, e.g.
 // {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
 message EvidenceEncrypted {
-  // The ID of the evidence.
+  // The ID of the evidence (plaintext).
   string id = 1 [(buf.validate.field).string.uuid = true];
 
-  // Time of evidence creation (plaintext, for temporal ordering).
+  // Time of evidence creation (plaintext).
   google.protobuf.Timestamp timestamp = 2 [(buf.validate.field).required = true];
 
-  // Reference to a target of evaluation (plaintext, needed for metric
-  // configuration lookup).
+  // Reference to a target of evaluation (plaintext).
   string target_of_evaluation_id = 3 [(buf.validate.field).string.uuid = true];
 
-  // Reference to the tool which provided the evidence (plaintext, needed for
-  // metric applicability).
+  // Reference to the tool which provided the evidence (plaintext).
   string tool_id = 4 [(buf.validate.field).string.min_len = 1];
 
   // The encrypted resource as a Struct that mirrors the ontology resource
@@ -112,10 +110,10 @@ message EvidenceEncrypted {
   // The resource types (plaintext, for metric applicability checks).
   repeated string resource_types = 6 [(buf.validate.field).repeated.min_items = 1];
 
-  // The resource ID (plaintext, for reference in assessment results).
+  // The resource ID (plaintext).
   string resource_id = 7 [(buf.validate.field).string.min_len = 1];
 
-  // Related resource IDs (plaintext, for dependency resolution).
+  // Related resource IDs (plaintext).
   repeated string experimental_related_resource_ids = 999;
 }
 
@@ -214,4 +212,5 @@ message GraphEdge {
     (buf.validate.field).string.min_len = 1
   ];
   string type = 4 [(google.api.field_behavior) = REQUIRED];
+}
 }

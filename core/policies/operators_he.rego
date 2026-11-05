@@ -2,8 +2,8 @@ package cch
 import rego.v1
 
 # operators_he.rego is the FHE (Fully Homomorphic Encryption) variant of
-# operators.rego. It provides the same comparison_result(property, value)
-# interface that 100+ metric .rego files import as data.cch.comparison_result,
+# operators.rego in `policies/security-metrics/`. It provides the same comparison_result(property, value)
+# interface that .rego files import as data.cch.comparison_result,
 # but instead of comparing plaintext values in Rego, it delegates each
 # comparison to the fhe_compare built-in.
 #
@@ -17,7 +17,6 @@ import rego.v1
 
 # operator and target_value are declared here to add them to the output of each single policy (so assessment can use it)
 operator = data.operator
-
 target_value = data.target_value
 
 # we also expose the whole metric configuration as well.
