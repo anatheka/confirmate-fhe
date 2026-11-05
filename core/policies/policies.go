@@ -84,6 +84,13 @@ type DefaultMetricConfigurationSource interface {
 	DefaultMetricConfiguration(ctx context.Context, metric *assessment.Metric) (*assessment.MetricConfiguration, error)
 }
 
+// FHEComparer performs homomorphic comparisons via the FHE proxy's Compare
+// service. The fhe_compare Rego built-in delegates to this interface. It
+// returns the serialized FheBool result (encrypted boolean) as raw bytes.
+type FHEComparer interface {
+	FheCompare(ctx context.Context, operator string, targetValue string, actualValue []byte, valueType string) (encryptedResult []byte, err error)
+}
+
 // ControlsSource is used to retrieve a list of controls
 type ControlsSource interface {
 	Controls() ([]*orchestrator.Control, error)

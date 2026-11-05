@@ -1165,8 +1165,19 @@ export interface components {
             operator: string;
             /** @description TargetValue is the target value used in the comparison */
             targetValue: components["schemas"]["GoogleProtobufValue"];
-            /** @description Success is true, if the comparison was successful */
+            /**
+             * @description Success is true, if the comparison was successful. In the FHE path, this
+             *      is always false because the result is encrypted and cannot be evaluated
+             *      in plaintext; use encrypted_success instead.
+             */
             success: boolean;
+            /**
+             * Format: bytes
+             * @description EncryptedSuccess holds the serialized FheBool result (encrypted boolean)
+             *      from the FHE proxy Compare service. Only set in the FHE path; empty in
+             *      the plaintext path.
+             */
+            encryptedSuccess?: string;
         };
         /**
          * @description Control represents a certain Control that needs to be fulfilled. It could be

@@ -5,8 +5,15 @@ import rego.v1
 # operators.rego. It provides the same comparison_result(property, value)
 # interface that 100+ metric .rego files import as data.cch.comparison_result,
 # but instead of comparing plaintext values in Rego, it delegates each
-# comparison to the fhe_compare built-in. The built-in sends the encrypted
-# value and plaintext target_value to the FHE proxy for homomorphic evaluation.
+# comparison to the fhe_compare built-in.
+#
+# In the HE path:
+# - success is always false because the encrypted boolean result cannot be
+#   evaluated in Rego's boolean logic.
+# - encrypted_success holds the base64-encoded serialized FheBool result from
+#   the FHE proxy Compare service.
+# - compliant is always false (derived from success via "every r in results
+#   { r.success }" in each metric .rego file).
 
 # operator and target_value are declared here to add them to the output of each single policy (so assessment can use it)
 operator = data.operator
@@ -16,29 +23,20 @@ target_value = data.target_value
 # we also expose the whole metric configuration as well.
 config = data.config
 
-# fhe_compare is a custom OPA built-in (registered in Go via rego.Function3).
-# It takes (operator, value, target_value), derives the datatype from
-# target_value, and sends an HTTP POST to the FHE proxy Compare endpoint.
-# The proxy performs the homomorphic comparison and returns a boolean.
-#
-# In the HE path, `value` is a base64-encoded FHE ciphertext string (from the
-# encrypted evidence resource), while `target_value` is the plaintext
-# configuration value (number, boolean, or string).
-
-# compare delegates to fhe_compare for the HE path. This exists so that
-# metrics importing data.cch.compare can be loaded; for metrics applicable
-# to encrypted resources, the comparison goes through fhe_compare.
-compare(operator, target_value, actual_value) := x if {
-	x := fhe_compare(operator, actual_value, target_value)
-}
+# compare delegates to fhe_compare for the HE path. Returns false (cannot be
+# computed) so that metrics using compare() directly in if-conditions are
+# non-compliant. The encrypted result is only captured via comparison_result.
+compare(operator, target_value, actual_value) := false
 
 # Builds a single comparison-result object in the shape Go's evalMapHE()
 # expects for assessment.ComparisonResult (property/value/target_value/
-# operator/success), using fhe_compare instead of plaintext compare().
+# operator/success/encrypted_success), using fhe_compare instead of plaintext
+# compare().
 comparison_result(property, value) := {
 	"property": property,
 	"value": value,
 	"target_value": data.cch.target_value,
 	"operator": data.cch.operator,
-	"success": fhe_compare(data.cch.operator, value, data.cch.target_value),
+	"success": false,
+	"encrypted_success": fhe_compare(data.cch.operator, value, data.cch.target_value),
 }

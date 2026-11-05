@@ -17,10 +17,7 @@ package policies
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/open-policy-agent/opa/v1/ast"
@@ -35,9 +32,7 @@ import (
 )
 
 // mockHEMetricsSource implements MetricsSource and
-// DefaultMetricConfigurationSource for testing the HE path. It loads metrics
-// from the filesystem, same as mockMetricsSource, but also provides
-// DefaultMetricConfiguration.
+// DefaultMetricConfigurationSource for testing the HE path.
 type mockHEMetricsSource struct {
 	t *testing.T
 }
@@ -62,26 +57,28 @@ func (m *mockHEMetricsSource) MetricImplementation(_ context.Context, _ assessme
 	return (&mockMetricsSource{t: m.t}).MetricImplementation(context.Background(), assessment.MetricImplementation_LANGUAGE_REGO, metric)
 }
 
-// fakeFHEProxy starts an httptest.Server that responds to /compare requests
-// with a configurable result. It returns the server.
-func fakeFHEProxy(t *testing.T, result bool) (srv *httptest.Server) {
-	t.Helper()
-	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/compare" {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		var req fheCompareRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		resp := fheCompareResponse{Result: result}
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	t.Cleanup(srv.Close)
-	return srv
+// mockFHEComparer is a mock implementation of FHEComparer for testing.
+type mockFHEComparer struct {
+	// result is the encrypted boolean bytes to return.
+	result []byte
+	// err is the error to return, if any.
+	err error
+	// lastOperator, lastTargetValue, lastValueType capture the last call args.
+	lastOperator    string
+	lastTargetValue string
+	lastValueType   string
+}
+
+var _ FHEComparer = (*mockFHEComparer)(nil)
+
+func (m *mockFHEComparer) FheCompare(_ context.Context, operator string, targetValue string, actualValue []byte, valueType string) ([]byte, error) {
+	m.lastOperator = operator
+	m.lastTargetValue = targetValue
+	m.lastValueType = valueType
+	if m.err != nil {
+		return nil, m.err
+	}
+	return m.result, nil
 }
 
 func Test_regoEval_EvalHE(t *testing.T) {
@@ -96,15 +93,15 @@ func Test_regoEval_EvalHE(t *testing.T) {
 		src      MetricsSource
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		fheResult bool
-		want      assert.Want[[]*CombinedResult]
-		wantErr   assert.WantErr
+		name        string
+		fields      fields
+		args        args
+		fheResult   []byte
+		want        assert.Want[[]*CombinedResult]
+		wantErr     assert.WantErr
 	}{
 		{
-			name: "applicable metric with compliant result",
+			name: "applicable metric with encrypted result",
 			fields: fields{
 				qc:   newQueryCache(),
 				mrtc: &metricsCache{m: make(map[string][]*assessment.Metric)},
@@ -121,13 +118,13 @@ func Test_regoEval_EvalHE(t *testing.T) {
 					ResourceTypes:        []string{"MachineLearningModel"},
 					Resource: structpb.NewStructValue(&structpb.Struct{
 						Fields: map[string]*structpb.Value{
-							"adversarialRobustnessScore": structpb.NewStringValue("encrypted-42.42"),
+							"adversarialRobustnessScore": structpb.NewStringValue("ZW5jcnlwdGVkLTQyLjQy"),
 						},
 					}).GetStructValue(),
 				},
 				src: &mockHEMetricsSource{t: t},
 			},
-			fheResult: true,
+			fheResult: []byte{0x01, 0x02, 0x03, 0x04},
 			want: func(t *testing.T, got []*CombinedResult, args ...any) bool {
 				if !assert.NotNil(t, got) {
 					return false
@@ -136,44 +133,19 @@ func Test_regoEval_EvalHE(t *testing.T) {
 					t.Error("expected at least one result")
 					return false
 				}
-				return assert.True(t, got[0].Applicable)
-			},
-			wantErr: assert.NoError,
-		},
-		{
-			name: "applicable metric with non-compliant result",
-			fields: fields{
-				qc:   newQueryCache(),
-				mrtc: &metricsCache{m: make(map[string][]*assessment.Metric)},
-				pkg:  DefaultRegoPackage,
-			},
-			args: args{
-				ctx: context.Background(),
-				evidence: &evidence.EvidenceEncrypted{
-					Id:                   evidencetest.MockEvidenceID1,
-					Timestamp:            timestamppb.Now(),
-					TargetOfEvaluationId: evidencetest.MockTargetOfEvaluationID1,
-					ToolId:               evidencetest.MockEvidenceToolID1,
-					ResourceId:           "dummy",
-					ResourceTypes:        []string{"MachineLearningModel"},
-					Resource: structpb.NewStructValue(&structpb.Struct{
-						Fields: map[string]*structpb.Value{
-							"adversarialRobustnessScore": structpb.NewStringValue("encrypted-42.42"),
-						},
-					}).GetStructValue(),
-				},
-				src: &mockHEMetricsSource{t: t},
-			},
-			fheResult: false,
-			want: func(t *testing.T, got []*CombinedResult, args ...any) bool {
-				if !assert.NotNil(t, got) {
+				if !assert.True(t, got[0].Applicable) {
 					return false
 				}
-				if len(got) == 0 {
-					t.Error("expected at least one result")
+				// compliant must be false (cannot be computed for encrypted values)
+				if !assert.False(t, got[0].Compliant) {
 					return false
 				}
-				return assert.False(t, got[0].Compliant)
+				// encrypted_success must be populated
+				if len(got[0].ComparisonResult) == 0 {
+					t.Error("expected at least one comparison result")
+					return false
+				}
+				return assert.NotNil(t, got[0].ComparisonResult[0].EncryptedSuccess)
 			},
 			wantErr: assert.NoError,
 		},
@@ -181,13 +153,12 @@ func Test_regoEval_EvalHE(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := fakeFHEProxy(t, tt.fheResult)
+			comparer := &mockFHEComparer{result: tt.fheResult}
 			re := &regoEval{
-				qc:            tt.fields.qc,
-				mrtc:          tt.fields.mrtc,
-				pkg:           tt.fields.pkg,
-				fheAddress:    srv.URL,
-				fheHTTPClient: srv.Client(),
+				qc:         tt.fields.qc,
+				mrtc:       tt.fields.mrtc,
+				pkg:        tt.fields.pkg,
+				fheComparer: comparer,
 			}
 			got, err := re.EvalHE(tt.args.ctx, tt.args.evidence, tt.args.src)
 
@@ -199,58 +170,48 @@ func Test_regoEval_EvalHE(t *testing.T) {
 
 func Test_regoEval_fheCompare(t *testing.T) {
 	tests := []struct {
-		name       string
-		fheResult  bool
-		operator   string
-		value      string
-		targetTerm *ast.Term
-		wantResult bool
-		wantErr    assert.WantErr
+		name         string
+		fheResult    []byte
+		operator     string
+		value        string
+		targetTerm   *ast.Term
+		wantValueType string
+		wantErr      assert.WantErr
 	}{
 		{
-			name:       "number comparison returns true",
-			fheResult:  true,
-			operator:   ">=",
-			value:      "encrypted-42.42",
-			targetTerm: ast.NumberTerm("0.5"),
-			wantResult: true,
-			wantErr:    assert.NoError,
+			name:          "number comparison",
+			fheResult:     []byte{0xAA, 0xBB},
+			operator:      ">=",
+			value:         "ZW5jcnlwdGVkLTQyLjQy",
+			targetTerm:    ast.NumberTerm("0.5"),
+			wantValueType: "number",
+			wantErr:       assert.NoError,
 		},
 		{
-			name:       "number comparison returns false",
-			fheResult:  false,
-			operator:   ">=",
-			value:      "encrypted-42.42",
-			targetTerm: ast.NumberTerm("0.5"),
-			wantResult: false,
-			wantErr:    assert.NoError,
+			name:          "boolean comparison",
+			fheResult:     []byte{0xCC, 0xDD},
+			operator:      "==",
+			value:         "ZW5jcnlwdGVkLXRydWU=",
+			targetTerm:    ast.BooleanTerm(true),
+			wantValueType: "boolean",
+			wantErr:       assert.NoError,
 		},
 		{
-			name:       "boolean comparison",
-			fheResult:  true,
-			operator:   "==",
-			value:      "encrypted-true",
-			targetTerm: ast.BooleanTerm(true),
-			wantResult: true,
-			wantErr:    assert.NoError,
-		},
-		{
-			name:       "string comparison",
-			fheResult:  true,
-			operator:   "==",
-			value:      "encrypted-dummy",
-			targetTerm: ast.StringTerm("dummy"),
-			wantResult: true,
-			wantErr:    assert.NoError,
+			name:          "string comparison",
+			fheResult:     []byte{0xEE, 0xFF},
+			operator:      "==",
+			value:         "ZW5jcnlwdGVkLWR1bW15",
+			targetTerm:    ast.StringTerm("dummy"),
+			wantValueType: "string",
+			wantErr:       assert.NoError,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := fakeFHEProxy(t, tt.fheResult)
+			comparer := &mockFHEComparer{result: tt.fheResult}
 			re := &regoEval{
-				fheAddress:    srv.URL,
-				fheHTTPClient: srv.Client(),
+				fheComparer: comparer,
 			}
 
 			got, err := re.fheCompare(
@@ -262,28 +223,37 @@ func Test_regoEval_fheCompare(t *testing.T) {
 
 			tt.wantErr(t, err)
 			if err == nil {
-				assert.Equal(t, ast.BooleanTerm(tt.wantResult).String(), got.String())
+				assert.NotNil(t, got)
+				// Verify the comparer received the correct valueType
+				assert.Equal(t, tt.wantValueType, comparer.lastValueType)
+				// Verify the result is a string (base64-encoded encrypted boolean)
+				_, ok := got.Value.(ast.String)
+				assert.True(t, ok)
 			}
 		})
 	}
 }
 
-func Test_regoEval_EvalHE_proxyError(t *testing.T) {
-	// When the FHE proxy returns an error, OPA's default behavior treats the
-	// built-in error as undefined, so the metric is evaluated as non-compliant
-	// rather than failing the entire evaluation.
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = fmt.Fprint(w, "FHE proxy unavailable")
-	}))
-	t.Cleanup(srv.Close)
+func Test_regoEval_fheCompare_noComparer(t *testing.T) {
+	re := &regoEval{}
+
+	_, err := re.fheCompare(
+		rego.BuiltinContext{Context: context.Background()},
+		ast.StringTerm(">="),
+		ast.StringTerm("ZW5jcnlwdGVkLTQyLjQy"),
+		ast.NumberTerm("0.5"),
+	)
+	assert.Error(t, err)
+}
+
+func Test_regoEval_EvalHE_comparerError(t *testing.T) {
+	comparer := &mockFHEComparer{err: fmt.Errorf("FHE proxy unavailable")}
 
 	re := &regoEval{
-		qc:            newQueryCache(),
-		mrtc:          &metricsCache{m: make(map[string][]*assessment.Metric)},
-		pkg:           DefaultRegoPackage,
-		fheAddress:    srv.URL,
-		fheHTTPClient: srv.Client(),
+		qc:          newQueryCache(),
+		mrtc:        &metricsCache{m: make(map[string][]*assessment.Metric)},
+		pkg:         DefaultRegoPackage,
+		fheComparer: comparer,
 	}
 
 	ev := &evidence.EvidenceEncrypted{
@@ -295,14 +265,16 @@ func Test_regoEval_EvalHE_proxyError(t *testing.T) {
 		ResourceTypes:        []string{"MachineLearningModel"},
 		Resource: structpb.NewStructValue(&structpb.Struct{
 			Fields: map[string]*structpb.Value{
-				"adversarialRobustnessScore": structpb.NewStringValue("encrypted-42.42"),
+				"adversarialRobustnessScore": structpb.NewStringValue("ZW5jcnlwdGVkLTQyLjQy"),
 			},
 		}).GetStructValue(),
 	}
 
+	// When the FHE proxy returns an error, OPA treats the built-in error as
+	// undefined, so the metric is evaluated as non-compliant rather than
+	// failing the entire evaluation.
 	got, err := re.EvalHE(context.Background(), ev, &mockHEMetricsSource{t: t})
 	assert.NoError(t, err)
-	// The metric should still be applicable (applicability doesn't use fhe_compare)
 	if len(got) > 0 {
 		assert.True(t, got[0].Applicable)
 		assert.False(t, got[0].Compliant)

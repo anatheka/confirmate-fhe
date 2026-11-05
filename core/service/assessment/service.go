@@ -29,6 +29,8 @@ import (
 	"confirmate.io/core/api/assessment"
 	"confirmate.io/core/api/assessment/assessmentconnect"
 	"confirmate.io/core/api/evidence"
+	"confirmate.io/core/api/fhe"
+	"confirmate.io/core/api/fhe/fheconnect"
 	"confirmate.io/core/api/ontology"
 	"confirmate.io/core/api/orchestrator"
 	"confirmate.io/core/api/orchestrator/orchestratorconnect"
@@ -142,6 +144,10 @@ type Service struct {
 	// cfg contains the service configuration
 	cfg Config
 
+	// fheCompareClient is the gRPC client for the FHE proxy Compare service.
+	// Only used when FheEnabled is true.
+	fheCompareClient fheconnect.CompareClient
+
 	// subscribers is a map of subscribers for metric change events
 	subscribers      map[int64]*subscriber
 	subscribersMutex sync.RWMutex
@@ -207,8 +213,7 @@ func NewService(opts ...service.Option[Service]) (handler assessmentconnect.Asse
 		policies.WithEventSubscriber(svc),
 		policies.WithSkipMetricOnError(svc.cfg.SkipMetricsOnError),
 		policies.WithApplicableMetricsCache(svc.cfg.CacheApplicableMetrics),
-		policies.WithFHEAddress(svc.cfg.FheAddress),
-		policies.WithFHEHTTPClient(svc.cfg.FheHTTPClient),
+		policies.WithFHEComparer(svc),
 	)
 
 	// Initialize orchestrator service client
@@ -220,10 +225,14 @@ func NewService(opts ...service.Option[Service]) (handler assessmentconnect.Asse
 		return nil, err
 	}
 
-	// If FHE is enabled, set the FHE HTTP client to the default HTTP client. This is used for communication with the FHE proxy service.
+	// If FHE is enabled, create the Compare client for the FHE proxy service.
 	if svc.cfg.FheEnabled {
-		slog.Info("FHE is enabled for the evidence store service", slog.String("fhe_address", svc.cfg.FheAddress))
-		svc.cfg.FheHTTPClient = service.DefaultHTTPClient
+		slog.Info("FHE is enabled for the assessment service", slog.String("fhe_address", svc.cfg.FheAddress))
+		fheHTTPClient := svc.cfg.FheHTTPClient
+		if fheHTTPClient == nil {
+			fheHTTPClient = service.DefaultHTTPClient
+		}
+		svc.fheCompareClient = fheconnect.NewCompareClient(fheHTTPClient, svc.cfg.FheAddress)
 	}
 
 	slog.Info("Orchestrator URL is set", slog.String("orchestrator_url", svc.cfg.OrchestratorAddress))
@@ -733,6 +742,40 @@ func (svc *Service) DefaultMetricConfiguration(ctx context.Context, metric *asse
 	}
 
 	return resp.Msg, nil
+}
+
+// FheCompare implements [policies.FHEComparer]. It calls the FHE proxy's
+// Compare gRPC service to evaluate a comparison between a plaintext
+// target_value and an encrypted actual_value, returning the encrypted boolean
+// result.
+func (svc *Service) FheCompare(ctx context.Context, operator string, targetValue string, actualValue []byte, valueType string) (encryptedResult []byte, err error) {
+	if svc.fheCompareClient == nil {
+		return nil, fmt.Errorf("FHE compare client not configured")
+	}
+
+	var vt fhe.ValueType
+	switch valueType {
+	case "boolean":
+		vt = fhe.ValueType_VALUE_TYPE_BOOLEAN
+	case "number":
+		vt = fhe.ValueType_VALUE_TYPE_NUMBER
+	case "string":
+		vt = fhe.ValueType_VALUE_TYPE_STRING
+	default:
+		vt = fhe.ValueType_VALUE_TYPE_UNSPECIFIED
+	}
+
+	resp, err := svc.fheCompareClient.Compare(ctx, connect.NewRequest(&fhe.CompareRequest{
+		Operator:    operator,
+		TargetValue: targetValue,
+		ActualValue: actualValue,
+		ValueType:   vt,
+	}))
+	if err != nil {
+		return nil, fmt.Errorf("FHE Compare RPC failed: %w", err)
+	}
+
+	return resp.Msg.Result, nil
 }
 
 // RegisterSubscriber registers a new subscriber for metric change events.

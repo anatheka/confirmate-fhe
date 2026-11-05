@@ -1011,6 +1011,47 @@ func TestService_GetMetricConfiguration(t *testing.T) {
 			},
 			wantErr: assert.NoError,
 		},
+		{
+			name: "default_only returns default configuration",
+			args: args{
+				req: &orchestrator.GetMetricConfigurationRequest{
+					TargetOfEvaluationId: orchestratortest.MockToeId1,
+					MetricId:             orchestratortest.MockMetricWithDefault.Id,
+					DefaultOnly:          true,
+				},
+			},
+			fields: fields{
+				db: persistencetest.NewInMemoryDB(t, types, joinTables),
+			},
+			want: func(t *testing.T, got *connect.Response[assessment.MetricConfiguration], args ...any) bool {
+				if !assert.NotNil(t, got) {
+					return false
+				}
+				assert.NotNil(t, got.Msg)
+				assert.Equal(t, orchestratortest.MockMetricWithDefault.Id, got.Msg.MetricId)
+				assert.Equal(t, orchestratortest.MockToeId1, got.Msg.TargetOfEvaluationId)
+				assert.True(t, got.Msg.IsDefault)
+				return assert.True(t, got.Msg.TargetValue.GetBoolValue())
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "default_only not found",
+			args: args{
+				req: &orchestrator.GetMetricConfigurationRequest{
+					TargetOfEvaluationId: orchestratortest.MockToeId1,
+					MetricId:             orchestratortest.MockNonExistentId,
+					DefaultOnly:          true,
+				},
+			},
+			fields: fields{
+				db: persistencetest.NewInMemoryDB(t, types, joinTables),
+			},
+			want: assert.Nil[*connect.Response[assessment.MetricConfiguration]],
+			wantErr: func(t *testing.T, err error, msgAndArgs ...any) bool {
+				return assert.IsConnectError(t, err, connect.CodeNotFound)
+			},
+		},
 	}
 
 	// Set up a default configuration for the fallback test

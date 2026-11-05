@@ -2737,7 +2737,17 @@ components:
                     description: TargetValue is the target value used in the comparison
                 success:
                     type: boolean
-                    description: Success is true, if the comparison was successful
+                    description: |-
+                        Success is true, if the comparison was successful. In the FHE path, this
+                         is always false because the result is encrypted and cannot be evaluated
+                         in plaintext; use encrypted_success instead.
+                encryptedSuccess:
+                    type: string
+                    description: |-
+                        EncryptedSuccess holds the serialized FheBool result (encrypted boolean)
+                         from the FHE proxy Compare service. Only set in the FHE path; empty in
+                         the plaintext path.
+                    format: bytes
             description: An optional structure containing more details how a comparison inside an assessment result was done and if it was successful.
         Control:
             required:

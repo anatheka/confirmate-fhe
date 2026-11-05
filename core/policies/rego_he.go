@@ -16,13 +16,10 @@
 package policies
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/base64"
 	"fmt"
-	"io"
 	"log/slog"
-	"net/http"
 	"strings"
 
 	"confirmate.io/core/api/assessment"
@@ -38,23 +35,13 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-// fheCompareRequest is the JSON body sent to the FHE proxy Compare endpoint.
-type fheCompareRequest struct {
-	Datatype    string `json:"datatype"`
-	Operator    string `json:"operator"`
-	Value       string `json:"value"`
-	TargetValue string `json:"target_value"`
-}
-
-// fheCompareResponse is the JSON body returned by the FHE proxy Compare endpoint.
-type fheCompareResponse struct {
-	Result bool `json:"result"`
-}
-
 // EvalHE evaluates a given encrypted evidence against all available Rego
 // policies and returns the result of all policies that were considered to be
 // applicable. It uses the fhe_compare built-in to delegate comparisons to the
-// FHE proxy for homomorphic evaluation.
+// FHE proxy for homomorphic evaluation. The encrypted boolean results are
+// stored in ComparisonResult.encrypted_success; the plaintext success and
+// compliant fields are always false because the encrypted results cannot be
+// evaluated in Rego.
 func (re *regoEval) EvalHE(ctx context.Context, ev *evidence.EvidenceEncrypted, src MetricsSource) (data []*CombinedResult, err error) {
 	var (
 		baseDir string
@@ -141,7 +128,8 @@ func (re *regoEval) EvalHE(ctx context.Context, ev *evidence.EvidenceEncrypted, 
 
 // evalMapHE evaluates a given metric against the provided map of encrypted
 // resource data. It prepares and executes a Rego query with the fhe_compare
-// built-in, which delegates comparisons to the FHE proxy.
+// built-in, which delegates comparisons to the FHE proxy and returns encrypted
+// boolean results.
 func (re *regoEval) evalMapHE(ctx context.Context, baseDir string, targetID string, metric *assessment.Metric, m map[string]interface{}, src MetricsSource) (result *CombinedResult, err error) {
 	var (
 		query  *rego.PreparedEvalQuery
@@ -206,15 +194,16 @@ func (re *regoEval) evalMapHE(ctx context.Context, baseDir string, targetID stri
 		//   1. operator (string) — e.g. ">=", "=="
 		//   2. value (any) — the encrypted ciphertext string from the evidence
 		//   3. target_value (any) — the plaintext target value from the config
-		// The built-in derives the datatype from target_value, sends an HTTP
-		// POST to the FHE proxy Compare endpoint, and returns a boolean.
+		// The built-in derives the ValueType from target_value, base64-decodes
+		// the value to bytes, calls the FHE proxy Compare gRPC service, and
+		// returns the encrypted boolean result as a base64-encoded string.
 		fheCompare := rego.Function3(
 			&rego.Function{
 				Name:        "fhe_compare",
-				Description: "Delegates a comparison to the FHE proxy for homomorphic evaluation",
+				Description: "Delegates a comparison to the FHE proxy for homomorphic evaluation, returning an encrypted boolean",
 				Decl: types.NewFunction(
 					[]types.Type{types.S, types.A, types.A},
-					types.B,
+					types.S,
 				),
 				Nondeterministic: true,
 			},
@@ -315,17 +304,22 @@ func (re *regoEval) evalMapHE(ctx context.Context, baseDir string, targetID stri
 }
 
 // fheCompare is the implementation of the fhe_compare Rego built-in. It
-// derives the datatype from the target_value term, serializes the operands,
-// sends an HTTP POST to the FHE proxy Compare endpoint, and returns the
-// boolean result as an ast.Term.
+// derives the ValueType from the target_value term, base64-decodes the
+// encrypted value to bytes, calls the FHE proxy Compare gRPC service, and
+// returns the encrypted boolean result as a base64-encoded string.
 func (re *regoEval) fheCompare(bctx rego.BuiltinContext, operatorTerm, valueTerm, targetValueTerm *ast.Term) (*ast.Term, error) {
 	var (
-		operatorStr   string
-		valueStr      string
+		operatorStr    string
+		valueStr       string
 		targetValueStr string
-		datatype      string
-		ok            bool
+		valueType      string
+		actualValue    []byte
+		err            error
 	)
+
+	if re.fheComparer == nil {
+		return nil, fmt.Errorf("fhe_compare: no FHE comparer configured")
+	}
 
 	// Extract operator (must be a string)
 	operatorVal, ok := operatorTerm.Value.(ast.String)
@@ -334,74 +328,50 @@ func (re *regoEval) fheCompare(bctx rego.BuiltinContext, operatorTerm, valueTerm
 	}
 	operatorStr = string(operatorVal)
 
-	// Extract value (the ciphertext — should be a string)
+	// Extract value (the ciphertext — should be a base64-encoded string)
 	valueVal, ok := valueTerm.Value.(ast.String)
 	if !ok {
-		// If it's not a string, fall back to the raw string representation
-		valueStr = valueTerm.String()
-	} else {
-		valueStr = string(valueVal)
+		return nil, fmt.Errorf("fhe_compare: value must be a base64-encoded ciphertext string, got %T", valueTerm.Value)
+	}
+	valueStr = string(valueVal)
+
+	// Base64-decode the value to get the raw encrypted bytes
+	actualValue, err = base64.StdEncoding.DecodeString(valueStr)
+	if err != nil {
+		return nil, fmt.Errorf("fhe_compare: could not base64-decode value: %w", err)
 	}
 
-	// Derive datatype from target_value and extract its string representation
+	// Derive ValueType and string representation from target_value
 	switch tv := targetValueTerm.Value.(type) {
 	case ast.Number:
-		datatype = "number"
-		targetValueStr = tv.String()
+		valueType = "number"
+		targetValueStr = string(tv)
 	case ast.Boolean:
-		datatype = "boolean"
+		valueType = "boolean"
 		if bool(tv) {
 			targetValueStr = "true"
 		} else {
 			targetValueStr = "false"
 		}
 	case ast.String:
-		datatype = "string"
+		valueType = "string"
 		targetValueStr = string(tv)
 	default:
 		return nil, fmt.Errorf("fhe_compare: unsupported target_value type %T", targetValueTerm.Value)
 	}
 
-	// Build the request body
-	reqBody := fheCompareRequest{
-		Datatype:    datatype,
-		Operator:    operatorStr,
-		Value:       valueStr,
-		TargetValue: targetValueStr,
-	}
-
-	bodyBytes, err := json.Marshal(reqBody)
+	// Call the FHE proxy Compare service via the comparer interface
+	encryptedResult, err := re.fheComparer.FheCompare(bctx.Context, operatorStr, targetValueStr, actualValue, valueType)
 	if err != nil {
-		return nil, fmt.Errorf("fhe_compare: could not marshal request: %w", err)
+		return nil, fmt.Errorf("fhe_compare: FHE proxy compare failed: %w", err)
 	}
 
-	// Send HTTP POST to the FHE proxy Compare endpoint
-	compareURL := strings.TrimRight(re.fheAddress, "/") + "/compare"
-	req, err := http.NewRequestWithContext(bctx.Context, http.MethodPost, compareURL, bytes.NewReader(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("fhe_compare: could not create request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
+	// Return the encrypted boolean as a base64-encoded string, so it can be
+	// stored in the comparison_result map and re-encoded to bytes in the proto
+	// ComparisonResult.encrypted_success field.
+	resultStr := base64.StdEncoding.EncodeToString(encryptedResult)
 
-	resp, err := re.fheHTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("fhe_compare: could not send request to FHE proxy: %w", err)
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("fhe_compare: FHE proxy returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var compareResp fheCompareResponse
-	if err = json.NewDecoder(resp.Body).Decode(&compareResp); err != nil {
-		return nil, fmt.Errorf("fhe_compare: could not decode response: %w", err)
-	}
-
-	return ast.BooleanTerm(compareResp.Result), nil
+	return ast.StringTerm(resultStr), nil
 }
 
 // createKeyFromEncrypted creates a cache key from the encrypted evidence's tool
