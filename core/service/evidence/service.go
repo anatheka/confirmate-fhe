@@ -152,7 +152,8 @@ func NewService(opts ...service.Option[Service]) (svc *Service, err error) {
 		)
 	}
 
-	// If FHE is enabled, set the FHE HTTP client to the default HTTP client. This is used for communication with the FHE proxy service.
+	// If FHE is enabled, redirect assessment calls to the FHE proxy
+	// service. The FHE proxy receives the evidence, encrypts the evidence and forwards the encrypted evidence to the assessment service.
 	if svc.cfg.FheEnabled {
 		slog.Info("FHE is enabled for the evidence store service", slog.String("fhe_address", svc.cfg.FheAddress))
 		svc.cfg.AssessmentAddress = svc.cfg.FheAddress
