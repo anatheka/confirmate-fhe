@@ -271,6 +271,7 @@ func (re *regoEval) evalMapHE(ctx context.Context, baseDir string, targetID stri
 	if metric.Name == "AdversarialRobustness" {
 		slog.Info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	}
+
 	result.Config = new(assessment.MetricConfiguration)
 	if err = reencode(results[0].Bindings["config"], result.Config); err != nil {
 		return nil, err

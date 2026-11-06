@@ -86,6 +86,7 @@ func Test_regoEval_EvalHE(t *testing.T) {
 		qc   *queryCache
 		mrtc *metricsCache
 		pkg  string
+		skipMetricOnError bool
 	}
 	type args struct {
 		ctx      context.Context
@@ -106,6 +107,7 @@ func Test_regoEval_EvalHE(t *testing.T) {
 				qc:   newQueryCache(),
 				mrtc: &metricsCache{m: make(map[string][]*assessment.Metric)},
 				pkg:  DefaultRegoPackage,
+				skipMetricOnError: true,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -118,7 +120,11 @@ func Test_regoEval_EvalHE(t *testing.T) {
 					ResourceTypes:        []string{"MachineLearningModel"},
 					Resource: structpb.NewStructValue(&structpb.Struct{
 						Fields: map[string]*structpb.Value{
-							"adversarialRobustnessScore": structpb.NewStringValue("ZW5jcnlwdGVkLTQyLjQy"),
+							"machineLearningModel": structpb.NewStructValue(&structpb.Struct{
+								Fields: map[string]*structpb.Value{
+									"adversarialRobustnessScore": structpb.NewStringValue("ZW5jcnlwdGVkLTQyLjQy"),
+								},
+							}),
 						},
 					}).GetStructValue(),
 				},
@@ -158,6 +164,7 @@ func Test_regoEval_EvalHE(t *testing.T) {
 				qc:         tt.fields.qc,
 				mrtc:       tt.fields.mrtc,
 				pkg:        tt.fields.pkg,
+				skipMetricOnError: tt.fields.skipMetricOnError,
 				fheComparer: comparer,
 			}
 			got, err := re.EvalHE(tt.args.ctx, tt.args.evidence, tt.args.src)
@@ -265,18 +272,18 @@ func Test_regoEval_EvalHE_comparerError(t *testing.T) {
 		ResourceTypes:        []string{"MachineLearningModel"},
 		Resource: structpb.NewStructValue(&structpb.Struct{
 			Fields: map[string]*structpb.Value{
-				"adversarialRobustnessScore": structpb.NewStringValue("ZW5jcnlwdGVkLTQyLjQy"),
+				"machineLearningModel": structpb.NewStructValue(&structpb.Struct{
+					Fields: map[string]*structpb.Value{
+						"adversarialRobustnessScore": structpb.NewStringValue("ZW5jcnlwdGVkLTQyLjQy"),
+					},
+				}),
 			},
 		}).GetStructValue(),
 	}
 
-	// When the FHE proxy returns an error, OPA treats the built-in error as
-	// undefined, so the metric is evaluated as non-compliant rather than
-	// failing the entire evaluation.
+	// With StrictBuiltinErrors enabled, a FHE proxy error is propagated as
+	// an evaluation error rather than being silently swallowed.
 	got, err := re.EvalHE(context.Background(), ev, &mockHEMetricsSource{t: t})
-	assert.NoError(t, err)
-	if len(got) > 0 {
-		assert.True(t, got[0].Applicable)
-		assert.False(t, got[0].Compliant)
-	}
+	assert.Error(t, err)
+	assert.Empty(t, got)
 }
