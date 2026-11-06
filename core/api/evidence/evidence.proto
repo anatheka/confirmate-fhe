@@ -110,9 +110,6 @@ message EvidenceEncrypted {
   // The resource types (plaintext, for metric applicability checks).
   repeated string resource_types = 6 [(buf.validate.field).repeated.min_items = 1];
 
-  // The resource ID (plaintext).
-  string resource_id = 7 [(buf.validate.field).string.min_len = 1];
-
   // Related resource IDs (plaintext).
   repeated string experimental_related_resource_ids = 999;
 }

@@ -181,8 +181,6 @@ type EvidenceEncrypted struct {
 	Resource *structpb.Struct `protobuf:"bytes,5,opt,name=resource,proto3" json:"resource,omitempty"`
 	// The resource types (plaintext, for metric applicability checks).
 	ResourceTypes []string `protobuf:"bytes,6,rep,name=resource_types,json=resourceTypes,proto3" json:"resource_types,omitempty"`
-	// The resource ID (plaintext).
-	ResourceId string `protobuf:"bytes,7,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
 	// Related resource IDs (plaintext).
 	ExperimentalRelatedResourceIds []string `protobuf:"bytes,999,rep,name=experimental_related_resource_ids,json=experimentalRelatedResourceIds,proto3" json:"experimental_related_resource_ids,omitempty"`
 	unknownFields                  protoimpl.UnknownFields
@@ -259,13 +257,6 @@ func (x *EvidenceEncrypted) GetResourceTypes() []string {
 		return x.ResourceTypes
 	}
 	return nil
-}
-
-func (x *EvidenceEncrypted) GetResourceId() string {
-	if x != nil {
-		return x.ResourceId
-	}
-	return ""
 }
 
 func (x *EvidenceEncrypted) GetExperimentalRelatedResourceIds() []string {
@@ -617,16 +608,14 @@ const file_api_evidence_evidence_proto_rawDesc = "" +
 	"\x17target_of_evaluation_id\x18\x03 \x01(\tB\x19\xbaH\x05r\x03\xb0\x01\x01\x9a\x84\x9e\x03\fgorm:\"index\"R\x14targetOfEvaluationId\x12Y\n" +
 	"\atool_id\x18\x04 \x01(\tB@\xbaH\x04r\x02\x10\x01\x9a\x84\x9e\x034gorm:\"index:idx_evidences_tool_timestamp,priority:1\"R\x06toolId\x12Y\n" +
 	"\bresource\x18\x06 \x01(\v2 .confirmate.ontology.v1.ResourceB\x1b\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\bresource\x12g\n" +
-	"!experimental_related_resource_ids\x18\xe7\a \x03(\tB\x1b\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\x1eexperimentalRelatedResourceIds\"\xae\x03\n" +
+	"!experimental_related_resource_ids\x18\xe7\a \x03(\tB\x1b\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\x1eexperimentalRelatedResourceIds\"\x84\x03\n" +
 	"\x11EvidenceEncrypted\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\ttimestamp\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\ttimestamp\x12?\n" +
 	"\x17target_of_evaluation_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x14targetOfEvaluationId\x12 \n" +
 	"\atool_id\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06toolId\x123\n" +
 	"\bresource\x18\x05 \x01(\v2\x17.google.protobuf.StructR\bresource\x12/\n" +
-	"\x0eresource_types\x18\x06 \x03(\tB\b\xbaH\x05\x92\x01\x02\b\x01R\rresourceTypes\x12(\n" +
-	"\vresource_id\x18\a \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
-	"resourceId\x12J\n" +
+	"\x0eresource_types\x18\x06 \x03(\tB\b\xbaH\x05\x92\x01\x02\b\x01R\rresourceTypes\x12J\n" +
 	"!experimental_related_resource_ids\x18\xe7\a \x03(\tR\x1eexperimentalRelatedResourceIds\"\xb4\x02\n" +
 	"\x10ResourceSnapshot\x12\x1a\n" +
 	"\x02id\x18\x01 \x01(\tB\n" +
