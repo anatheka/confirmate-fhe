@@ -5407,10 +5407,10 @@ components:
                     type: array
                     items:
                         type: string
-                    description: The resource types (plaintext, for metric applicability checks).
+                    description: The resource types (plaintext).
                 resourceId:
                     type: string
-                    description: The resource ID (plaintext, used to link assessment results to the resource).
+                    description: The resource ID (plaintext).
                 experimentalRelatedResourceIds:
                     type: array
                     items:

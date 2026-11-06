@@ -447,13 +447,13 @@ type EvaluationResult struct {
 	// NOTE: id is the last column of idx_evaluation_results_control_timestamp_id and idx_evaluation_results_audit_scope_parents, so
 	// the "ORDER BY ..., timestamp DESC, id DESC" of the latest_by_control_id query
 	// is fully index-backed.
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" gorm:"index:idx_evaluation_results_control_timestamp_id,priority:3,sort:desc;index:idx_evaluation_results_audit_scope_parents,priority:4,sort:desc;index:idx_evaluation_results_audit_scope_control,priority:4,sort:desc"`
 	// The Target of Evaluation ID the evaluation belongs to.
 	//
 	// NOTE: idx_evaluation_results_toe_control_timestamp is picked up by
 	// GORM's AutoMigrate on service startup (see persistence.NewDB). See the
 	// note on control_id below regarding a safe production rollout.
-	TargetOfEvaluationId string `protobuf:"bytes,2,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty"`
+	TargetOfEvaluationId string `protobuf:"bytes,2,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty" gorm:"index:idx_evaluation_results_toe_control_timestamp,priority:1"`
 	// The Audit Scope ID the evaluation belongs to
 	//
 	// NOTE: idx_evaluation_results_audit_scope_parents is a partial index (audit_scope_id, control_id, timestamp DESC,
@@ -469,7 +469,7 @@ type EvaluationResult struct {
 	// table (~6s on 4.5M rows; ~0.4s with the index). Pre-create it out-of-band on
 	// large tables: `CREATE INDEX CONCURRENTLY idx_evaluation_results_audit_scope_control
 	// ON evaluation_results (audit_scope_id, control_id, timestamp DESC, id DESC);`
-	AuditScopeId string `protobuf:"bytes,3,opt,name=audit_scope_id,json=auditScopeId,proto3" json:"audit_scope_id,omitempty"`
+	AuditScopeId string `protobuf:"bytes,3,opt,name=audit_scope_id,json=auditScopeId,proto3" json:"audit_scope_id,omitempty" gorm:"index:idx_evaluation_results_audit_scope_parents,priority:1;index:idx_evaluation_results_audit_scope_control,priority:1"`
 	// The control id the evaluation was based on.
 	//
 	// NOTE: idx_evaluation_results_control_timestamp and
@@ -492,28 +492,28 @@ type EvaluationResult struct {
 	// CONCURRENTLY idx_evaluation_results_audit_scope_parents ON
 	// evaluation_results (audit_scope_id, control_id, timestamp DESC, id DESC)
 	// WHERE parent_control_id IS NULL;`
-	ControlId string `protobuf:"bytes,4,opt,name=control_id,json=controlId,proto3" json:"control_id,omitempty"`
+	ControlId string `protobuf:"bytes,4,opt,name=control_id,json=controlId,proto3" json:"control_id,omitempty" gorm:"index:idx_evaluation_results_control_timestamp,priority:1;index:idx_evaluation_results_toe_control_timestamp,priority:2;index:idx_evaluation_results_control_timestamp_id,priority:1;index:idx_evaluation_results_audit_scope_parents,priority:2;index:idx_evaluation_results_audit_scope_control,priority:2"`
 	// The catalog the evaluated control belongs to
 	ControlCatalogId string `protobuf:"bytes,6,opt,name=control_catalog_id,json=controlCatalogId,proto3" json:"control_catalog_id,omitempty"`
 	// Optionally, specifies the parent control ID, if this is a sub-control
 	//
 	// NOTE: parent_control_id carries the predicate of the partial index
 	// idx_evaluation_results_audit_scope_parents (WHERE parent_control_id IS NULL).
-	ParentControlId *string `protobuf:"bytes,7,opt,name=parent_control_id,json=parentControlId,proto3,oneof" json:"parent_control_id,omitempty"`
+	ParentControlId *string `protobuf:"bytes,7,opt,name=parent_control_id,json=parentControlId,proto3,oneof" json:"parent_control_id,omitempty" gorm:"index:idx_evaluation_results_audit_scope_parents,where:parent_control_id IS NULL"`
 	// Evaluation status
 	Status EvaluationStatus `protobuf:"varint,8,opt,name=status,proto3,enum=confirmate.evaluation.v1.EvaluationStatus" json:"status,omitempty"`
 	// Time of evaluation
-	Timestamp *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=timestamp,proto3" json:"timestamp,omitempty" gorm:"serializer:timestamppb;type:timestamp;index:idx_evaluation_results_control_timestamp,priority:2;index:idx_evaluation_results_toe_control_timestamp,priority:3;index:idx_evaluation_results_control_timestamp_id,priority:2,sort:desc;index:idx_evaluation_results_audit_scope_parents,priority:3,sort:desc;index:idx_evaluation_results_audit_scope_control,priority:3,sort:desc"`
 	// List of assessment results because of which the evaluation status is compliant or not compliant
-	AssessmentResultIds []string `protobuf:"bytes,10,rep,name=assessment_result_ids,json=assessmentResultIds,proto3" json:"assessment_result_ids,omitempty"`
+	AssessmentResultIds []string `protobuf:"bytes,10,rep,name=assessment_result_ids,json=assessmentResultIds,proto3" json:"assessment_result_ids,omitempty" gorm:"serializer:json"`
 	Comment             *string  `protobuf:"bytes,11,opt,name=comment,proto3,oneof" json:"comment,omitempty"`
 	// Optional, but required if the status is one of the "manually" ones. This
 	// denotes how long the (manual) created evaluation result is valid. During
 	// this time, no automatic results are generated for the specific control.
-	ValidUntil *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=valid_until,json=validUntil,proto3,oneof" json:"valid_until,omitempty"`
+	ValidUntil *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=valid_until,json=validUntil,proto3,oneof" json:"valid_until,omitempty" gorm:"serializer:timestamppb;type:timestamp"`
 	// Optional, but if you use manually created evaluation results, you can provide a justification for the manual
 	// creation, such as a large file like a policy in PDF format.
-	Data          []byte `protobuf:"bytes,21,opt,name=data,proto3,oneof" json:"data,omitempty"`
+	Data          []byte `protobuf:"bytes,21,opt,name=data,proto3,oneof" json:"data,omitempty" gorm:"type:bytea"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -635,12 +635,12 @@ func (x *EvaluationResult) GetData() []byte {
 type EvaluationJob struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	AuditScopeId string                 `protobuf:"bytes,1,opt,name=audit_scope_id,json=auditScopeId,proto3" json:"audit_scope_id,omitempty"`
-	StartedAt    *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	StartedAt    *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty" gorm:"serializer:timestamppb;type:timestamp"`
 	// interval in minutes the evaluation executes periodically. The default interval is set to 5 minutes.
 	Interval int32 `protobuf:"varint,3,opt,name=interval,proto3" json:"interval,omitempty"`
 	// the number of times the job has finished running
 	RunCount      int32                  `protobuf:"varint,4,opt,name=run_count,json=runCount,proto3" json:"run_count,omitempty"`
-	LastRun       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_run,json=lastRun,proto3" json:"last_run,omitempty"`
+	LastRun       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_run,json=lastRun,proto3" json:"last_run,omitempty" gorm:"serializer:timestamppb;type:timestamp"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

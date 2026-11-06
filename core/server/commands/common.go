@@ -128,10 +128,10 @@ var (
 			Sources: envVarSources("fhe-enabled"),
 		},
 		&cli.StringFlag{
-			Name:    "fhe-address",
+			Name:    "fhe-proxy-address",
 			Usage:   "Address of the FHE (Fully Homomorphic Encryption) proxy service the assessment service connects to for encrypted comparison",
 			Value:   "localhost:8081",
-			Sources: envVarSources("fhe-address"),
+			Sources: envVarSources("fhe-proxy-address"),
 		},
 		&cli.StringFlag{
 			Name:    "fhe-evaluator-address",

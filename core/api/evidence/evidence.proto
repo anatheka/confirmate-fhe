@@ -107,10 +107,10 @@ message EvidenceEncrypted {
   // ciphertext strings.
   google.protobuf.Struct resource = 5;
 
-  // The resource types (plaintext, for metric applicability checks).
+  // The resource types (plaintext).
   repeated string resource_types = 6 [(buf.validate.field).repeated.min_items = 1];
 
-  // The resource ID (plaintext, used to link assessment results to the resource).
+  // The resource ID (plaintext).
   string resource_id = 7;
 
   // Related resource IDs (plaintext).

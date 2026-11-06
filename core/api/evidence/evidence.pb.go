@@ -52,7 +52,7 @@ type Evidence struct {
 	// idx_evidences_tool_timestamp (tool_id, timestamp DESC) that backs the lookup
 	// of the latest evidence of a tool in ListTools. See the note on tool_id for a
 	// safe production rollout.
-	Timestamp *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty" gorm:"serializer:timestamppb;type:timestamp;index:idx_evidences_tool_timestamp,priority:2,sort:desc"`
 	// Reference to a target of evaluation (e.g., service, organization) this evidence was gathered from.
 	//
 	// NOTE: this index is picked up by GORM's AutoMigrate on service startup
@@ -63,7 +63,7 @@ type Evidence struct {
 	// `CREATE INDEX CONCURRENTLY idx_evidences_target_of_evaluation_id ON
 	// evidences (target_of_evaluation_id);` before rolling this out;
 	// AutoMigrate detects the existing index by name and skips it.
-	TargetOfEvaluationId string `protobuf:"bytes,3,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty"`
+	TargetOfEvaluationId string `protobuf:"bytes,3,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty" gorm:"index"`
 	// Reference to the tool which provided the evidence
 	//
 	// NOTE: idx_evidences_tool_timestamp (tool_id, timestamp DESC) is picked up by
@@ -74,15 +74,15 @@ type Evidence struct {
 	// out-of-band with `CREATE INDEX CONCURRENTLY idx_evidences_tool_timestamp ON
 	// evidences (tool_id, timestamp DESC);` before rolling this out; AutoMigrate
 	// detects the existing index by name and skips it.
-	ToolId string `protobuf:"bytes,4,opt,name=tool_id,json=toolId,proto3" json:"tool_id,omitempty"`
+	ToolId string `protobuf:"bytes,4,opt,name=tool_id,json=toolId,proto3" json:"tool_id,omitempty" gorm:"index:idx_evidences_tool_timestamp,priority:1"`
 	// Semantic representation of the Cloud resource according to our defined ontology
-	Resource *ontology.Resource `protobuf:"bytes,6,opt,name=resource,proto3" json:"resource,omitempty"`
+	Resource *ontology.Resource `protobuf:"bytes,6,opt,name=resource,proto3" json:"resource,omitempty" gorm:"serializer:json"`
 	// Very experimental property. Use at own risk. This property will be deleted again.
 	//
 	// Related resource IDs. The assessment will wait until all evidences for related resource have arrived in the
 	// assessment and are recent enough. In the future, this will be replaced with information in the "related" edges in
 	// the resource. For now, this needs to be set manually in the evidence.
-	ExperimentalRelatedResourceIds []string `protobuf:"bytes,999,rep,name=experimental_related_resource_ids,json=experimentalRelatedResourceIds,proto3" json:"experimental_related_resource_ids,omitempty"`
+	ExperimentalRelatedResourceIds []string `protobuf:"bytes,999,rep,name=experimental_related_resource_ids,json=experimentalRelatedResourceIds,proto3" json:"experimental_related_resource_ids,omitempty" gorm:"serializer:json"`
 	unknownFields                  protoimpl.UnknownFields
 	sizeCache                      protoimpl.SizeCache
 }
@@ -179,9 +179,9 @@ type EvidenceEncrypted struct {
 	// structure. Sensitive field values are replaced by base64-encoded FHE
 	// ciphertext strings.
 	Resource *structpb.Struct `protobuf:"bytes,5,opt,name=resource,proto3" json:"resource,omitempty"`
-	// The resource types (plaintext, for metric applicability checks).
+	// The resource types (plaintext).
 	ResourceTypes []string `protobuf:"bytes,6,rep,name=resource_types,json=resourceTypes,proto3" json:"resource_types,omitempty"`
-	// The resource ID (plaintext, used to link assessment results to the resource).
+	// The resource ID (plaintext).
 	ResourceId string `protobuf:"bytes,7,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
 	// Related resource IDs (plaintext).
 	ExperimentalRelatedResourceIds []string `protobuf:"bytes,999,rep,name=experimental_related_resource_ids,json=experimentalRelatedResourceIds,proto3" json:"experimental_related_resource_ids,omitempty"`
@@ -297,14 +297,14 @@ type ResourceSnapshot struct {
 	// idx_resource_snapshots_target_of_evaluation_id ON resource_snapshots
 	// (target_of_evaluation_id);` before rolling this out; AutoMigrate
 	// detects the existing index by name and skips it.
-	TargetOfEvaluationId string `protobuf:"bytes,2,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty"`
+	TargetOfEvaluationId string `protobuf:"bytes,2,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty" gorm:"index"`
 	// ResourceType contains a comma separated string of resource types according
 	// to our ontology.
 	ResourceType string `protobuf:"bytes,3,opt,name=resource_type,json=resourceType,proto3" json:"resource_type,omitempty"`
 	// Reference to the tool which provided the resource
 	ToolId string `protobuf:"bytes,4,opt,name=tool_id,json=toolId,proto3" json:"tool_id,omitempty"`
 	// Semantic representation of the Cloud resource according to our defined ontology
-	Resource      *ontology.Resource `protobuf:"bytes,6,opt,name=resource,proto3" json:"resource,omitempty"`
+	Resource      *ontology.Resource `protobuf:"bytes,6,opt,name=resource,proto3" json:"resource,omitempty" gorm:"serializer:json"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

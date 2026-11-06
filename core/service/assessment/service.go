@@ -231,7 +231,7 @@ func NewService(opts ...service.Option[Service]) (handler assessmentconnect.Asse
 
 	// If FHE is enabled, create the Compare client for the HE evaluator service.
 	if svc.cfg.FheEnabled {
-		slog.Info("FHE is enabled for the assessment service", slog.String("fhe_evaluator_address", svc.cfg.FheEvaluatorAddress))
+		slog.Info("FHE is enabled for the assessment service", slog.String("FHE evaluator address", svc.cfg.FheEvaluatorAddress))
 		fheHTTPClient := svc.cfg.FheEvaluatorHTTPClient
 		if fheHTTPClient == nil {
 			fheHTTPClient = service.DefaultHTTPClient
