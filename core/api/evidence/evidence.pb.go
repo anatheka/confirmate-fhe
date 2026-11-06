@@ -167,15 +167,13 @@ func (x *Evidence) GetExperimentalRelatedResourceIds() []string {
 // {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
 type EvidenceEncrypted struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The ID of the evidence.
+	// The ID of the evidence (plaintext).
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Time of evidence creation (plaintext, for temporal ordering).
+	// Time of evidence creation (plaintext).
 	Timestamp *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	// Reference to a target of evaluation (plaintext, needed for metric
-	// configuration lookup).
+	// Reference to a target of evaluation (plaintext).
 	TargetOfEvaluationId string `protobuf:"bytes,3,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty"`
-	// Reference to the tool which provided the evidence (plaintext, needed for
-	// metric applicability).
+	// Reference to the tool which provided the evidence (plaintext).
 	ToolId string `protobuf:"bytes,4,opt,name=tool_id,json=toolId,proto3" json:"tool_id,omitempty"`
 	// The encrypted resource as a Struct that mirrors the ontology resource
 	// structure. Sensitive field values are replaced by base64-encoded FHE
@@ -183,9 +181,9 @@ type EvidenceEncrypted struct {
 	Resource *structpb.Struct `protobuf:"bytes,5,opt,name=resource,proto3" json:"resource,omitempty"`
 	// The resource types (plaintext, for metric applicability checks).
 	ResourceTypes []string `protobuf:"bytes,6,rep,name=resource_types,json=resourceTypes,proto3" json:"resource_types,omitempty"`
-	// The resource ID (plaintext, for reference in assessment results).
+	// The resource ID (plaintext).
 	ResourceId string `protobuf:"bytes,7,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
-	// Related resource IDs (plaintext, for dependency resolution).
+	// Related resource IDs (plaintext).
 	ExperimentalRelatedResourceIds []string `protobuf:"bytes,999,rep,name=experimental_related_resource_ids,json=experimentalRelatedResourceIds,proto3" json:"experimental_related_resource_ids,omitempty"`
 	unknownFields                  protoimpl.UnknownFields
 	sizeCache                      protoimpl.SizeCache
@@ -612,7 +610,7 @@ var File_api_evidence_evidence_proto protoreflect.FileDescriptor
 
 const file_api_evidence_evidence_proto_rawDesc = "" +
 	"\n" +
-	"\x1bapi/evidence/evidence.proto\x12\x16confirmate.evidence.v1\x1a4policies/security-metrics/ontology/v1/ontology.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x13tagger/tagger.proto\"\xc1\x04\n" +
+	"\x1bapi/evidence/evidence.proto\x12\x16confirmate.evidence.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a4policies/security-metrics/ontology/v1/ontology.proto\x1a\x13tagger/tagger.proto\"\xc1\x04\n" +
 	"\bEvidence\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\xa9\x01\n" +
 	"\ttimestamp\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampBo\xbaH\x03\xc8\x01\x01\x9a\x84\x9e\x03dgorm:\"serializer:timestamppb;type:timestamp;index:idx_evidences_tool_timestamp,priority:2,sort:desc\"R\ttimestamp\x12P\n" +

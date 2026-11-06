@@ -2023,21 +2023,17 @@ components:
             properties:
                 id:
                     type: string
-                    description: The ID of the evidence.
+                    description: The ID of the evidence (plaintext).
                 timestamp:
                     type: string
-                    description: Time of evidence creation (plaintext, for temporal ordering).
+                    description: Time of evidence creation (plaintext).
                     format: date-time
                 targetOfEvaluationId:
                     type: string
-                    description: |-
-                        Reference to a target of evaluation (plaintext, needed for metric
-                         configuration lookup).
+                    description: Reference to a target of evaluation (plaintext).
                 toolId:
                     type: string
-                    description: |-
-                        Reference to the tool which provided the evidence (plaintext, needed for
-                         metric applicability).
+                    description: Reference to the tool which provided the evidence (plaintext).
                 resource:
                     type: object
                     description: |-
@@ -2051,12 +2047,12 @@ components:
                     description: The resource types (plaintext, for metric applicability checks).
                 resourceId:
                     type: string
-                    description: The resource ID (plaintext, for reference in assessment results).
+                    description: The resource ID (plaintext).
                 experimentalRelatedResourceIds:
                     type: array
                     items:
                         type: string
-                    description: Related resource IDs (plaintext, for dependency resolution).
+                    description: Related resource IDs (plaintext).
             description: |-
                 EvidenceEncrypted is an overlay of [Evidence] used in the FHE (Fully
                  Homomorphic Encryption) path. It carries the same structural metadata as

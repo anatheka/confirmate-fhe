@@ -28,15 +28,15 @@ enum ValueType {
   VALUE_TYPE_STRING = 3;
 }
 
-// Compare is the business-logic service. It evaluates a comparison
+// Evaluator is the business-logic service. It evaluates a comparison
 // operator between a plaintext target_value and an encrypted actual_value,
 // returning an encrypted boolean result.
-service Compare {
-  // Compare evaluates the comparison and returns an encrypted boolean.
-  rpc Compare(CompareRequest) returns (CompareResponse) {}
+service Evaluator {
+  // Evaluator evaluates the comparison and returns an encrypted boolean.
+  rpc Evaluator(EvaluatorRequest) returns (EvaluatorResponse) {}
 }
 
-message CompareRequest {
+message EvaluatorRequest {
   // Operator: one of <, >, <=, >=, ==, isIn, allIn.
   // isIn and allIn are not yet implemented and return UNIMPLEMENTED.
   string operator = 1 [(buf.validate.field).string.min_len = 1];
@@ -52,7 +52,7 @@ message CompareRequest {
   ValueType value_type = 4;
 }
 
-message CompareResponse {
+message EvaluatorResponse {
   // Serialized FheBool result (encrypted boolean).
   bytes result = 1;
 }
