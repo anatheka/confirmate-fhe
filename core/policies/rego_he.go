@@ -52,10 +52,13 @@ func (re *regoEval) EvalHE(ctx context.Context, ev *evidence.EvidenceEncrypted, 
 	baseDir = "."
 
 	// Convert the encrypted resource (google.protobuf.Struct) to a map for
-	// Rego input. The structure mirrors the ontology resource, e.g.
-	// {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
+	// Rego input. The incoming Struct is nested under the resource type
+	// key (e.g. {"machineLearningModel": {"adversarialRobustnessScore": "..."}}),
+	// but the Rego metrics expect flat access (input.adversarialRobustnessScore),
+	// matching the plaintext ontology.ResourceMap output. We unwrap the
+	// single nested key to produce a flat map.
 	if ev.Resource != nil {
-		m = ev.Resource.AsMap()
+		m = unwrapEncryptedResource(ev.Resource.AsMap())
 	} else {
 		m = make(map[string]any)
 	}
@@ -232,6 +235,7 @@ func (re *regoEval) evalMapHE(ctx context.Context, baseDir string, targetID stri
 				nil,
 			),
 			fheCompare,
+			rego.StrictBuiltinErrors(true),
 		).PrepareForEval(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not prepare rego evaluation for metric %s: %w", metric.Name, err)
@@ -264,6 +268,9 @@ func (re *regoEval) evalMapHE(ctx context.Context, baseDir string, targetID stri
 		MetricName: metric.Name,
 	}
 
+	if metric.Name == "AdversarialRobustness" {
+		slog.Info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	}
 	result.Config = new(assessment.MetricConfiguration)
 	if err = reencode(results[0].Bindings["config"], result.Config); err != nil {
 		return nil, err
@@ -380,4 +387,22 @@ func createKeyFromEncrypted(ev *evidence.EvidenceEncrypted, types []string) (key
 	key = strings.Join(append(types, ev.ToolId), "-")
 	key = strings.ReplaceAll(key, " ", "")
 	return
+}
+
+// unwrapEncryptedResource flattens the nested resource map produced by
+// google.protobuf.Struct.AsMap(). The FHE proxy sends the resource nested
+// under its ontology type key (e.g. {"machineLearningModel": {"score": "..."}}),
+// but the Rego metrics expect flat access (input.score), matching the
+// plaintext ontology.ResourceMap output. If the map has exactly one key
+// whose value is itself a map, that inner map is returned. Otherwise the
+// map is returned as-is.
+func unwrapEncryptedResource(m map[string]any) map[string]any {
+	if len(m) == 1 {
+		for _, v := range m {
+			if inner, ok := v.(map[string]any); ok {
+				return inner
+			}
+		}
+	}
+	return m
 }
