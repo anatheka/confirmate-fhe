@@ -143,11 +143,11 @@ func (re *regoEval) evalMapHE(ctx context.Context, baseDir string, targetID stri
 	// default configurations so the proxy can pre-encrypt target values). If
 	// the source does not support default config fetching, fall back to the
 	// regular MetricConfiguration method.
-	if dcs, ok := any(src).(DefaultMetricConfigurationSource); ok {
-		config, err = dcs.DefaultMetricConfiguration(ctx, metric)
-	} else {
-		config, err = src.MetricConfiguration(ctx, targetID, metric)
-	}
+	// if dcs, ok := any(src).(DefaultMetricConfigurationSource); ok {
+	// 	config, err = dcs.DefaultMetricConfiguration(ctx, metric)
+	// } else {
+	config, err = src.MetricConfiguration(ctx, targetID, metric)
+	// }
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch metric configuration for metric %s: %w", metric.Name, err)
 	}

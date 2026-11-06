@@ -39,7 +39,7 @@
                 // "--auth-enabled",
                 "--fhe-enabled",
                 "--fhe-proxy-address=http://localhost:8081",
-                "--fhe-evaluator-address=http://localhost:8082"
+                "--fhe-evaluator-address=http://localhost:8083"
             ]
         },
 		{
