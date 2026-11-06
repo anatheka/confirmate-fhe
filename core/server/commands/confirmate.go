@@ -277,7 +277,7 @@ func runConfirmate(ctx context.Context, cmd *cli.Command) (err error) {
 			},
 			AssessmentHTTPClient: assessmentClient,
 			FheEnabled:           cmd.Bool("fhe-enabled"),
-			FheAddress:           cmd.String("fhe-address"),
+			FheProxyAddress:      cmd.String("fhe-address"),
 			FheEvaluatorAddress:  cmd.String("fhe-evaluator-address"),
 		}),
 	}, evidenceOptions...)
