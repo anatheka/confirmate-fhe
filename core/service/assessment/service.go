@@ -29,6 +29,8 @@ import (
 	"confirmate.io/core/api/assessment"
 	"confirmate.io/core/api/assessment/assessmentconnect"
 	"confirmate.io/core/api/evidence"
+	"confirmate.io/core/api/fhe"
+	"confirmate.io/core/api/fhe/fheconnect"
 	"confirmate.io/core/api/ontology"
 	"confirmate.io/core/api/orchestrator"
 	"confirmate.io/core/api/orchestrator/orchestratorconnect"
@@ -53,6 +55,7 @@ var DefaultConfig = Config{
 	SkipMetricsOnError:     false,
 	CacheApplicableMetrics: false,
 	FheEnabled:             false,
+	FheEvaluatorAddress:    "localhost:8082",
 }
 
 // Config represents the configuration for the assessment [Service].
@@ -77,10 +80,13 @@ type Config struct {
 	CacheApplicableMetrics bool
 	// FheEnabled indicates whether FHE (Fully Homomorphic Encryption) is enabled for the service.
 	FheEnabled bool
-	// FheAddress is the address of the FHE proxy service.
-	FheAddress string
-	// FheHTTPClient is the HTTP client used for communication with the FHE proxy service.
-	FheHTTPClient *http.Client
+	// FheEvaluatorAddress is the address of the HE evaluator service. The
+	// assessment service uses this to call the Compare gRPC service for
+	// encrypted comparison.
+	FheEvaluatorAddress string
+	// FheEvaluatorHTTPClient is the HTTP client used for communication with
+	// the HE evaluator service. Only used when FheEnabled is true.
+	FheEvaluatorHTTPClient *http.Client
 }
 
 const (
@@ -135,6 +141,10 @@ type Service struct {
 
 	// pe contains the actual policy evaluation engine we use
 	pe policies.PolicyEval
+
+	// fheCompareClient is the gRPC client for the HE evaluator's Compare
+	// service. Only used when FheEnabled is true.
+	fheCompareClient fheconnect.CompareClient
 
 	// authz defines our authorization strategy for target-of-evaluation scoped access.
 	authz service.AuthorizationStrategy
@@ -207,6 +217,7 @@ func NewService(opts ...service.Option[Service]) (handler assessmentconnect.Asse
 		policies.WithEventSubscriber(svc),
 		policies.WithSkipMetricOnError(svc.cfg.SkipMetricsOnError),
 		policies.WithApplicableMetricsCache(svc.cfg.CacheApplicableMetrics),
+		policies.WithFHEComparer(svc),
 	)
 
 	// Initialize orchestrator service client
@@ -218,10 +229,14 @@ func NewService(opts ...service.Option[Service]) (handler assessmentconnect.Asse
 		return nil, err
 	}
 
-	// If FHE is enabled, set the FHE HTTP client to the default HTTP client. This is used for communication with the FHE proxy service.
+	// If FHE is enabled, create the Compare client for the HE evaluator service.
 	if svc.cfg.FheEnabled {
-		slog.Info("FHE is enabled for the evidence store service", slog.String("fhe_address", svc.cfg.FheAddress))
-		svc.cfg.FheHTTPClient = service.DefaultHTTPClient
+		slog.Info("FHE is enabled for the assessment service", slog.String("FHE evaluator address", svc.cfg.FheEvaluatorAddress))
+		fheHTTPClient := svc.cfg.FheEvaluatorHTTPClient
+		if fheHTTPClient == nil {
+			fheHTTPClient = service.DefaultHTTPClient
+		}
+		svc.fheCompareClient = fheconnect.NewCompareClient(fheHTTPClient, svc.cfg.FheEvaluatorAddress, connect.WithGRPC())
 	}
 
 	slog.Info("Orchestrator URL is set", slog.String("orchestrator_url", svc.cfg.OrchestratorAddress))
@@ -428,7 +443,9 @@ func (svc *Service) handleEvidence(
 		slog.Any("Timestamp", ev.Timestamp.AsTime()),
 	)
 
+	// Evaluate the evidence against the policy engine
 	evaluations, err = svc.pe.Eval(ctx, ev, resource, related, svc)
+
 	if err != nil {
 		newError = fmt.Errorf("could not evaluate evidence: %w", err)
 
@@ -475,6 +492,110 @@ func (svc *Service) handleEvidence(
 		}
 
 		// Inform hooks about new assessment result
+		go svc.informHooks(ctx, result, nil)
+
+		svc.streamMutex.Lock()
+		err = svc.orchestratorStream.Send(&orchestrator.StoreAssessmentResultRequest{
+			Result: result,
+		})
+		svc.streamMutex.Unlock()
+
+		if err != nil {
+			slog.Error("Failed to send assessment result to orchestrator", log.Err(err))
+			go svc.informHooks(ctx, nil, fmt.Errorf("failed to send result: %w", err))
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+// AssessEncryptedEvidence assesses encrypted evidence sent by the FHE proxy.
+// This implements the [assessmentconnect.AssessmentHandler.AssessEncryptedEvidence] RPC method.
+func (svc *Service) AssessEncryptedEvidence(ctx context.Context, req *connect.Request[assessment.AssessEncryptedEvidenceRequest]) (res *connect.Response[assessment.AssessEncryptedEvidenceResponse], err error) {
+	// Validate the request
+	if err = service.Validate(req); err != nil {
+		return nil, err
+	}
+
+	ev := req.Msg.Evidence
+
+	if ev.Resource == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("encrypted evidence has no resource"))
+	}
+
+	_, err = svc.handleEncryptedEvidence(context.Background(), ev)
+	if err != nil {
+		return nil, err
+	}
+
+	res = connect.NewResponse(&assessment.AssessEncryptedEvidenceResponse{
+		Status: assessment.AssessmentStatus_ASSESSMENT_STATUS_ASSESSED,
+	})
+	return res, nil
+}
+
+// handleEncryptedEvidence is the helper method for the actual assessment of
+// encrypted evidence. It calls EvalHE and sends the results to the orchestrator.
+func (svc *Service) handleEncryptedEvidence(
+	ctx context.Context,
+	ev *evidence.EvidenceEncrypted,
+) (results []*assessment.AssessmentResult, err error) {
+	var (
+		evaluations []*policies.CombinedResult
+		metricID    string
+		result      *assessment.AssessmentResult
+	)
+
+	slog.Debug("Evaluating encrypted evidence",
+		slog.String("Evidence", ev.Id),
+		slog.String("ResourceId", ev.GetResourceId()),
+		slog.String("ToolId", ev.ToolId),
+		slog.Any("Timestamp", ev.Timestamp.AsTime()),
+	)
+
+	evaluations, err = svc.pe.EvalHE(ctx, ev, svc)
+	if err != nil {
+		newError := fmt.Errorf("could not evaluate encrypted evidence: %w", err)
+		go svc.informHooks(ctx, nil, newError)
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	if len(evaluations) == 0 {
+		slog.Debug("No policy evaluation for encrypted evidence", slog.String("Evidence", ev.Id), slog.String("ResourceId", ev.GetResourceId()), slog.String("ToolId", ev.ToolId))
+		return results, nil
+	}
+
+	for _, data := range evaluations {
+		if data == nil {
+			slog.Error("One empty policy evaluation detected for encrypted evidence. That should not happen.", slog.String("Evidence", ev.GetId()))
+			continue
+		}
+		metricID = data.MetricID
+
+		slog.Debug("Evaluated encrypted evidence with metric", slog.String("Evidence", ev.Id), slog.String("MetricID", metricID), slog.Bool("Compliant", data.Compliant))
+
+		result = &assessment.AssessmentResult{
+			Id:                   uuid.NewString(),
+			CreatedAt:            timestamppb.Now(),
+			TargetOfEvaluationId: ev.GetTargetOfEvaluationId(),
+			MetricId:             metricID,
+			MetricConfiguration:  data.Config,
+			Compliant:            data.Compliant,
+			EvidenceId:           ev.GetId(),
+			ResourceId:           ev.GetResourceId(),
+			ResourceTypes:        ev.GetResourceTypes(),
+			ComplianceComment:    data.Message,
+			ComplianceDetails:    data.ComparisonResult,
+			ToolId:               new(assessment.AssessmentToolId),
+			HistoryUpdatedAt:     timestamppb.Now(),
+			History: []*assessment.Record{{
+				EvidenceId:         ev.GetId(),
+				EvidenceRecordedAt: timestamppb.Now(),
+			}},
+		}
+
 		go svc.informHooks(ctx, result, nil)
 
 		svc.streamMutex.Lock()
@@ -602,6 +723,63 @@ func (svc *Service) MetricConfiguration(ctx context.Context, TargetOfEvaluationI
 	}
 
 	return cache.MetricConfiguration, nil
+}
+
+// DefaultMetricConfiguration implements [policies.DefaultMetricConfigurationSource].
+// It retrieves the default metric configuration (is_default = true) from the
+// orchestrator using the default_only flag, bypassing ToE-specific configs.
+// This is used by the FHE path to fetch pre-encryptable default target values.
+func (svc *Service) DefaultMetricConfiguration(ctx context.Context, metric *assessment.Metric) (config *assessment.MetricConfiguration, err error) {
+	var (
+		req  *connect.Request[orchestrator.GetMetricConfigurationRequest]
+		resp *connect.Response[assessment.MetricConfiguration]
+	)
+
+	req = connect.NewRequest(&orchestrator.GetMetricConfigurationRequest{
+		MetricId:    metric.Id,
+		DefaultOnly: true,
+	})
+
+	resp, err = svc.orchestratorClient.GetMetricConfiguration(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve default metric configuration for %s: %w", metric.Id, err)
+	}
+
+	return resp.Msg, nil
+}
+
+// FheCompare implements [policies.FHEComparer]. It calls the FHE proxy's
+// Compare gRPC service to evaluate a comparison between a plaintext
+// target_value and an encrypted actual_value, returning the encrypted boolean
+// result.
+func (svc *Service) FheCompare(ctx context.Context, operator string, targetValue string, actualValue []byte, valueType string) (encryptedResult []byte, err error) {
+	if svc.fheCompareClient == nil {
+		return nil, fmt.Errorf("FHE compare client not configured")
+	}
+
+	var vt fhe.ValueType
+	switch valueType {
+	case "boolean":
+		vt = fhe.ValueType_VALUE_TYPE_BOOLEAN
+	case "number":
+		vt = fhe.ValueType_VALUE_TYPE_NUMBER
+	case "string":
+		vt = fhe.ValueType_VALUE_TYPE_STRING
+	default:
+		vt = fhe.ValueType_VALUE_TYPE_UNSPECIFIED
+	}
+
+	resp, err := svc.fheCompareClient.Compare(ctx, connect.NewRequest(&fhe.CompareRequest{
+		Operator:    operator,
+		TargetValue: targetValue,
+		ActualValue: actualValue,
+		ValueType:   vt,
+	}))
+	if err != nil {
+		return nil, fmt.Errorf("FHE Compare RPC failed: %w", err)
+	}
+
+	return resp.Msg.Result, nil
 }
 
 // RegisterSubscriber registers a new subscriber for metric change events.

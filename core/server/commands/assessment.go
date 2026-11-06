@@ -78,7 +78,7 @@ var AssessmentCommand = &cli.Command{
 			SkipMetricsOnError:     cmd.Bool("assessment-skip-metrics-on-error"),
 			CacheApplicableMetrics: cmd.Bool("assessment-cache-applicable-metrics"),
 			FheEnabled:             cmd.Bool("fhe-enabled"),
-			FheAddress:             cmd.String("fhe-address"),
+			FheEvaluatorAddress:    cmd.String("fhe-evaluator-address"),
 		}
 
 		if cmd.Bool("auth-enabled") {

@@ -752,6 +752,11 @@ message GetMetricConfigurationRequest {
     (buf.validate.field).string.min_len = 1,
     (google.api.field_behavior) = REQUIRED
   ];
+
+  // If true, returns the default metric configuration (is_default = true)
+  // regardless of the target_of_evaluation_id. Used e.g. by the FHE path to
+  // retrieve pre-encryptable default target values.
+  bool default_only = 3;
 }
 
 message ListMetricConfigurationRequest {

@@ -44,6 +44,12 @@ type PolicyEval interface {
 	// unwrapping, the callee of this function needs to supply the unwrapped ontology resource, since they most likely
 	// unwrapped the resource already, e.g. to check for validation.
 	Eval(ctx context.Context, evidence *evidence.Evidence, r ontology.IsResource, related map[string]ontology.IsResource, src MetricsSource) (data []*CombinedResult, err error)
+
+	// EvalHE evaluates a given encrypted evidence against all available Rego
+	// policies using the FHE path. It uses the fhe_compare built-in to delegate
+	// comparisons to the FHE proxy. The evidence carries encrypted resource
+	// field values as ciphertext strings in a google.protobuf.Struct.
+	EvalHE(ctx context.Context, evidence *evidence.EvidenceEncrypted, src MetricsSource) (data []*CombinedResult, err error)
 }
 
 type CombinedResult struct {
@@ -66,6 +72,23 @@ type MetricsSource interface {
 	Metrics(ctx context.Context) ([]*assessment.Metric, error)
 	MetricConfiguration(ctx context.Context, targetID string, metric *assessment.Metric) (*assessment.MetricConfiguration, error)
 	MetricImplementation(ctx context.Context, lang assessment.MetricImplementation_Language, metric *assessment.Metric) (*assessment.MetricImplementation, error)
+}
+
+// DefaultMetricConfigurationSource is optionally implemented by MetricsSource
+// implementations that can retrieve default metric configurations (i.e.
+// configurations with is_default = true, independent of a specific target of
+// evaluation). The FHE path uses this to fetch pre-encryptable default target
+// values. If the MetricsSource does not implement this interface, the HE path
+// falls back to the regular MetricConfiguration method.
+type DefaultMetricConfigurationSource interface {
+	DefaultMetricConfiguration(ctx context.Context, metric *assessment.Metric) (*assessment.MetricConfiguration, error)
+}
+
+// FHEComparer performs homomorphic comparisons via the FHE proxy's Compare
+// service. The fhe_compare Rego built-in delegates to this interface. It
+// returns the serialized FheBool result (encrypted boolean) as raw bytes.
+type FHEComparer interface {
+	FheCompare(ctx context.Context, operator string, targetValue string, actualValue []byte, valueType string) (encryptedResult []byte, err error)
 }
 
 // ControlsSource is used to retrieve a list of controls

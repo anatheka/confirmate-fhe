@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/v1/assessment/encrypted_evidences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Assesses encrypted evidence sent by the FHE proxy. Part of the public API,
+         *      also exposed as REST.
+         */
+        post: operations["Assessment_AssessEncryptedEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/assessment/evidences": {
         parameters: {
             query?: never;
@@ -184,6 +204,18 @@ export interface components {
             retentionPeriod?: string;
             securityAlertsEnabled?: boolean;
             loggingServiceIds?: string[];
+        };
+        /**
+         * @description AssessEncryptedEvidenceResponse belongs to AssessEncryptedEvidence, which uses
+         *      a custom unary RPC and therefore requires a response message according to
+         *      the style convention.
+         */
+        AssessEncryptedEvidenceResponse: {
+            /**
+             * Format: enum
+             * @enum {string}
+             */
+            status?: "ASSESSMENT_STATUS_UNSPECIFIED" | "ASSESSMENT_STATUS_WAITING_FOR_RELATED" | "ASSESSMENT_STATUS_ASSESSED" | "ASSESSMENT_STATUS_FAILED";
         };
         /**
          * @description AssessEvidenceResponse belongs to AssessEvidence, which uses a custom unary
@@ -1193,6 +1225,39 @@ export interface components {
              *      assessment and are recent enough. In the future, this will be replaced with information in the "related" edges in
              *      the resource. For now, this needs to be set manually in the evidence.
              */
+            experimentalRelatedResourceIds?: string[];
+        };
+        /**
+         * @description EvidenceEncrypted is an overlay of [Evidence] used in the FHE (Fully
+         *      Homomorphic Encryption) path. It carries the same structural metadata as
+         *      Evidence in plaintext, but sensitive resource field values are replaced by
+         *      FHE ciphertext strings. The resource is represented as a
+         *      google.protobuf.Struct that mirrors the ontology resource structure, e.g.
+         *      {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
+         */
+        EvidenceEncrypted: {
+            /** @description The ID of the evidence (plaintext). */
+            id?: string;
+            /**
+             * Format: date-time
+             * @description Time of evidence creation (plaintext).
+             */
+            timestamp?: string;
+            /** @description Reference to a target of evaluation (plaintext). */
+            targetOfEvaluationId?: string;
+            /** @description Reference to the tool which provided the evidence (plaintext). */
+            toolId?: string;
+            /**
+             * @description The encrypted resource as a Struct that mirrors the ontology resource
+             *      structure. Sensitive field values are replaced by base64-encoded FHE
+             *      ciphertext strings.
+             */
+            resource?: Record<string, never>;
+            /** @description The resource types (plaintext, for metric applicability checks). */
+            resourceTypes?: string[];
+            /** @description The resource ID (plaintext, used to link assessment results to the resource). */
+            resourceId?: string;
+            /** @description Related resource IDs (plaintext). */
             experimentalRelatedResourceIds?: string[];
         };
         /**
@@ -4016,6 +4081,7 @@ export type SchemaAndRule = components['schemas']['AndRule'];
 export type SchemaAnomalyDetection = components['schemas']['AnomalyDetection'];
 export type SchemaApplication = components['schemas']['Application'];
 export type SchemaApplicationLogging = components['schemas']['ApplicationLogging'];
+export type SchemaAssessEncryptedEvidenceResponse = components['schemas']['AssessEncryptedEvidenceResponse'];
 export type SchemaAssessEvidenceResponse = components['schemas']['AssessEvidenceResponse'];
 export type SchemaAssetInventory = components['schemas']['AssetInventory'];
 export type SchemaAsymmetricCipher = components['schemas']['AsymmetricCipher'];
@@ -4088,6 +4154,7 @@ export type SchemaEntryPoint = components['schemas']['EntryPoint'];
 export type SchemaEqualityCheck = components['schemas']['EqualityCheck'];
 export type SchemaError = components['schemas']['Error'];
 export type SchemaEvidence = components['schemas']['Evidence'];
+export type SchemaEvidenceEncrypted = components['schemas']['EvidenceEncrypted'];
 export type SchemaExitBoundaryOperation = components['schemas']['ExitBoundaryOperation'];
 export type SchemaExplainableResults = components['schemas']['ExplainableResults'];
 export type SchemaFile = components['schemas']['File'];
@@ -4248,6 +4315,39 @@ export type SchemaWorkflow = components['schemas']['Workflow'];
 export type SchemaZoneRedundancy = components['schemas']['ZoneRedundancy'];
 export type $defs = Record<string, never>;
 export interface operations {
+    Assessment_AssessEncryptedEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenceEncrypted"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessEncryptedEvidenceResponse"];
+                };
+            };
+            /** @description Default error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Status"];
+                };
+            };
+        };
+    };
     Assessment_AssessEvidence: {
         parameters: {
             query?: never;

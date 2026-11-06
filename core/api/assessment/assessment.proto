@@ -48,6 +48,15 @@ service Assessment {
   // Assesses stream of evidences sent by the discovery and returns a response
   // stream. Part of the public API. Not exposed as REST.
   rpc AssessEvidences(stream AssessEvidenceRequest) returns (stream AssessEvidencesResponse) {}
+
+  // Assesses encrypted evidence sent by the FHE proxy. Part of the public API,
+  // also exposed as REST.
+  rpc AssessEncryptedEvidence(AssessEncryptedEvidenceRequest) returns (AssessEncryptedEvidenceResponse) {
+    option (google.api.http) = {
+      post: "/v1/assessment/encrypted_evidences"
+      body: "evidence"
+    };
+  }
 }
 
 message ConfigureAssessmentRequest {}
@@ -76,4 +85,17 @@ message AssessEvidencesResponse {
   AssessmentStatus status = 1;
 
   string status_message = 2;
+}
+
+// AssessEncryptedEvidenceRequest carries encrypted evidence from the FHE proxy
+// for assessment in the FHE (Fully Homomorphic Encryption) path.
+message AssessEncryptedEvidenceRequest {
+  confirmate.evidence.v1.EvidenceEncrypted evidence = 1 [(buf.validate.field).required = true];
+}
+
+// AssessEncryptedEvidenceResponse belongs to AssessEncryptedEvidence, which uses
+// a custom unary RPC and therefore requires a response message according to
+// the style convention.
+message AssessEncryptedEvidenceResponse {
+  AssessmentStatus status = 1;
 }

@@ -336,10 +336,16 @@ type ComparisonResult struct {
 	Operator string `protobuf:"bytes,3,opt,name=operator,proto3" json:"operator,omitempty"`
 	// TargetValue is the target value used in the comparison
 	TargetValue *structpb.Value `protobuf:"bytes,4,opt,name=target_value,json=targetValue,proto3" json:"target_value,omitempty" gorm:"serializer:json"`
-	// Success is true, if the comparison was successful
-	Success       bool `protobuf:"varint,5,opt,name=success,proto3" json:"success,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Success is true, if the comparison was successful. In the FHE path, this
+	// is always false because the result is encrypted and cannot be evaluated
+	// in plaintext; use encrypted_success instead.
+	Success bool `protobuf:"varint,5,opt,name=success,proto3" json:"success,omitempty"`
+	// EncryptedSuccess holds the serialized FheBool result (encrypted boolean)
+	// from the FHE proxy Compare service. Only set in the FHE path; empty in
+	// the plaintext path.
+	EncryptedSuccess []byte `protobuf:"bytes,6,opt,name=encrypted_success,json=encryptedSuccess,proto3" json:"encrypted_success,omitempty" gorm:"serializer:json"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ComparisonResult) Reset() {
@@ -405,6 +411,13 @@ func (x *ComparisonResult) GetSuccess() bool {
 		return x.Success
 	}
 	return false
+}
+
+func (x *ComparisonResult) GetEncryptedSuccess() []byte {
+	if x != nil {
+		return x.EncryptedSuccess
+	}
+	return nil
 }
 
 type Record struct {
@@ -492,14 +505,15 @@ const file_api_assessment_result_proto_rawDesc = "" +
 	"\n" +
 	"\b_tool_idB\x0e\n" +
 	"\f_valid_untilB\t\n" +
-	"\a_author\"\xb6\x02\n" +
+	"\a_author\"\x80\x03\n" +
 	"\x10ComparisonResult\x12&\n" +
 	"\bproperty\x18\x01 \x01(\tB\n" +
 	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\bproperty\x127\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x05value\x12A\n" +
 	"\boperator\x18\x03 \x01(\tB%\xe0A\x02\xbaH\x1fr\x1d2\x1b^(<|>|<=|>=|==|isIn|allIn)$R\boperator\x12_\n" +
 	"\ftarget_value\x18\x04 \x01(\v2\x16.google.protobuf.ValueB$\xe0A\x02\xbaH\x03\xc8\x01\x01\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\vtargetValue\x12\x1d\n" +
-	"\asuccess\x18\x05 \x01(\bB\x03\xe0A\x02R\asuccess\"\xc1\x01\n" +
+	"\asuccess\x18\x05 \x01(\bB\x03\xe0A\x02R\asuccess\x12H\n" +
+	"\x11encrypted_success\x18\x06 \x01(\fB\x1b\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\x10encryptedSuccess\"\xc1\x01\n" +
 	"\x06Record\x12,\n" +
 	"\vevidence_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\n" +
 	"evidenceId\x12\x88\x01\n" +

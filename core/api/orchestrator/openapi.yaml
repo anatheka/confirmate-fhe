@@ -5,7 +5,7 @@ openapi: 3.0.3
 info:
     title: Orchestrator API
     description: Manages the orchestration of components within the confirmate architecture
-    version: core/v0.3.0-32-gba5341e2
+    version: 
 paths:
     /v1/orchestrator/assessment_results:
         get:
@@ -1829,6 +1829,14 @@ paths:
                   required: true
                   schema:
                     type: string
+                - name: defaultOnly
+                  in: query
+                  description: |-
+                    If true, returns the default metric configuration (is_default = true)
+                     regardless of the target_of_evaluation_id. Used e.g. by the FHE path to
+                     retrieve pre-encryptable default target values.
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK
@@ -2729,7 +2737,17 @@ components:
                     description: TargetValue is the target value used in the comparison
                 success:
                     type: boolean
-                    description: Success is true, if the comparison was successful
+                    description: |-
+                        Success is true, if the comparison was successful. In the FHE path, this
+                         is always false because the result is encrypted and cannot be evaluated
+                         in plaintext; use encrypted_success instead.
+                encryptedSuccess:
+                    type: string
+                    description: |-
+                        EncryptedSuccess holds the serialized FheBool result (encrypted boolean)
+                         from the FHE proxy Compare service. Only set in the FHE path; empty in
+                         the plaintext path.
+                    format: bytes
             description: An optional structure containing more details how a comparison inside an assessment result was done and if it was successful.
         Control:
             required:

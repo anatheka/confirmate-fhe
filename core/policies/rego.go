@@ -83,6 +83,10 @@ type regoEval struct {
 	// legitimately differ in which metrics apply to it. Disabled by default; enable only if the
 	// discovery overhead matters more than that risk for your metric set.
 	cacheApplicableMetrics bool
+
+	// fheComparer is used by the fhe_compare Rego built-in to delegate
+	// comparisons to the FHE proxy. If nil, the HE path cannot evaluate.
+	fheComparer FHEComparer
 }
 
 type queryCache struct {
@@ -122,6 +126,14 @@ func WithSkipMetricOnError(skip bool) RegoEvalOption {
 func WithApplicableMetricsCache(enabled bool) RegoEvalOption {
 	return func(re *regoEval) {
 		re.cacheApplicableMetrics = enabled
+	}
+}
+
+// WithFHEComparer is an option to configure the FHE comparer used by the
+// fhe_compare built-in for homomorphic comparisons via the FHE proxy.
+func WithFHEComparer(comparer FHEComparer) RegoEvalOption {
+	return func(re *regoEval) {
+		re.fheComparer = comparer
 	}
 }
 

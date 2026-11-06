@@ -1847,8 +1847,12 @@ type GetMetricConfigurationRequest struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	TargetOfEvaluationId string                 `protobuf:"bytes,1,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty"`
 	MetricId             string                 `protobuf:"bytes,2,opt,name=metric_id,json=metricId,proto3" json:"metric_id,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// If true, returns the default metric configuration (is_default = true)
+	// regardless of the target_of_evaluation_id. Used e.g. by the FHE path to
+	// retrieve pre-encryptable default target values.
+	DefaultOnly   bool `protobuf:"varint,3,opt,name=default_only,json=defaultOnly,proto3" json:"default_only,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetMetricConfigurationRequest) Reset() {
@@ -1893,6 +1897,13 @@ func (x *GetMetricConfigurationRequest) GetMetricId() string {
 		return x.MetricId
 	}
 	return ""
+}
+
+func (x *GetMetricConfigurationRequest) GetDefaultOnly() bool {
+	if x != nil {
+		return x.DefaultOnly
+	}
+	return false
 }
 
 type ListMetricConfigurationRequest struct {
@@ -6539,11 +6550,12 @@ const file_api_orchestrator_orchestrator_proto_rawDesc = "" +
 	"\x13number_of_evidences\x18\x03 \x01(\x03R\x11numberOfEvidences\x12=\n" +
 	"\x1bnumber_of_selected_catalogs\x18\x04 \x01(\x03R\x18numberOfSelectedCatalogs\"\x82\x01\n" +
 	" UpdateMetricConfigurationRequest\x12^\n" +
-	"\rconfiguration\x18\x01 \x01(\v2-.confirmate.assessment.v1.MetricConfigurationB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\rconfiguration\"\x8c\x01\n" +
+	"\rconfiguration\x18\x01 \x01(\v2-.confirmate.assessment.v1.MetricConfigurationB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\rconfiguration\"\xaf\x01\n" +
 	"\x1dGetMetricConfigurationRequest\x12B\n" +
 	"\x17target_of_evaluation_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x14targetOfEvaluationId\x12'\n" +
 	"\tmetric_id\x18\x02 \x01(\tB\n" +
-	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\bmetricId\"\xcd\x01\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\bmetricId\x12!\n" +
+	"\fdefault_only\x18\x03 \x01(\bR\vdefaultOnly\"\xcd\x01\n" +
 	"\x1eListMetricConfigurationRequest\x12B\n" +
 	"\x17target_of_evaluation_id\x18\n" +
 	" \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x14targetOfEvaluationId\x12\x1b\n" +

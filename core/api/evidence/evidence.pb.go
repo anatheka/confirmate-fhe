@@ -27,6 +27,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -158,6 +159,122 @@ func (x *Evidence) GetExperimentalRelatedResourceIds() []string {
 	return nil
 }
 
+// EvidenceEncrypted is an overlay of [Evidence] used in the FHE (Fully
+// Homomorphic Encryption) path. It carries the same structural metadata as
+// Evidence in plaintext, but sensitive resource field values are replaced by
+// FHE ciphertext strings. The resource is represented as a
+// google.protobuf.Struct that mirrors the ontology resource structure, e.g.
+// {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
+type EvidenceEncrypted struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The ID of the evidence (plaintext).
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Time of evidence creation (plaintext).
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// Reference to a target of evaluation (plaintext).
+	TargetOfEvaluationId string `protobuf:"bytes,3,opt,name=target_of_evaluation_id,json=targetOfEvaluationId,proto3" json:"target_of_evaluation_id,omitempty"`
+	// Reference to the tool which provided the evidence (plaintext).
+	ToolId string `protobuf:"bytes,4,opt,name=tool_id,json=toolId,proto3" json:"tool_id,omitempty"`
+	// The encrypted resource as a Struct that mirrors the ontology resource
+	// structure. Sensitive field values are replaced by base64-encoded FHE
+	// ciphertext strings.
+	Resource *structpb.Struct `protobuf:"bytes,5,opt,name=resource,proto3" json:"resource,omitempty"`
+	// The resource types (plaintext).
+	ResourceTypes []string `protobuf:"bytes,6,rep,name=resource_types,json=resourceTypes,proto3" json:"resource_types,omitempty"`
+	// The resource ID (plaintext).
+	ResourceId string `protobuf:"bytes,7,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	// Related resource IDs (plaintext).
+	ExperimentalRelatedResourceIds []string `protobuf:"bytes,999,rep,name=experimental_related_resource_ids,json=experimentalRelatedResourceIds,proto3" json:"experimental_related_resource_ids,omitempty"`
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
+}
+
+func (x *EvidenceEncrypted) Reset() {
+	*x = EvidenceEncrypted{}
+	mi := &file_api_evidence_evidence_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EvidenceEncrypted) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EvidenceEncrypted) ProtoMessage() {}
+
+func (x *EvidenceEncrypted) ProtoReflect() protoreflect.Message {
+	mi := &file_api_evidence_evidence_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EvidenceEncrypted.ProtoReflect.Descriptor instead.
+func (*EvidenceEncrypted) Descriptor() ([]byte, []int) {
+	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *EvidenceEncrypted) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *EvidenceEncrypted) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timestamp
+	}
+	return nil
+}
+
+func (x *EvidenceEncrypted) GetTargetOfEvaluationId() string {
+	if x != nil {
+		return x.TargetOfEvaluationId
+	}
+	return ""
+}
+
+func (x *EvidenceEncrypted) GetToolId() string {
+	if x != nil {
+		return x.ToolId
+	}
+	return ""
+}
+
+func (x *EvidenceEncrypted) GetResource() *structpb.Struct {
+	if x != nil {
+		return x.Resource
+	}
+	return nil
+}
+
+func (x *EvidenceEncrypted) GetResourceTypes() []string {
+	if x != nil {
+		return x.ResourceTypes
+	}
+	return nil
+}
+
+func (x *EvidenceEncrypted) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
+func (x *EvidenceEncrypted) GetExperimentalRelatedResourceIds() []string {
+	if x != nil {
+		return x.ExperimentalRelatedResourceIds
+	}
+	return nil
+}
+
 // ResourceSnapshot is the persisted representation of a cloud resource.
 // It is distinct from confirmate.ontology.v1.Resource, which is the semantic
 // discriminated union of all concrete ontology types. ResourceSnapshot carries
@@ -194,7 +311,7 @@ type ResourceSnapshot struct {
 
 func (x *ResourceSnapshot) Reset() {
 	*x = ResourceSnapshot{}
-	mi := &file_api_evidence_evidence_proto_msgTypes[1]
+	mi := &file_api_evidence_evidence_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -206,7 +323,7 @@ func (x *ResourceSnapshot) String() string {
 func (*ResourceSnapshot) ProtoMessage() {}
 
 func (x *ResourceSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_api_evidence_evidence_proto_msgTypes[1]
+	mi := &file_api_evidence_evidence_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -219,7 +336,7 @@ func (x *ResourceSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceSnapshot.ProtoReflect.Descriptor instead.
 func (*ResourceSnapshot) Descriptor() ([]byte, []int) {
-	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{1}
+	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ResourceSnapshot) GetId() string {
@@ -266,7 +383,7 @@ type UpdateResourceRequest struct {
 
 func (x *UpdateResourceRequest) Reset() {
 	*x = UpdateResourceRequest{}
-	mi := &file_api_evidence_evidence_proto_msgTypes[2]
+	mi := &file_api_evidence_evidence_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -278,7 +395,7 @@ func (x *UpdateResourceRequest) String() string {
 func (*UpdateResourceRequest) ProtoMessage() {}
 
 func (x *UpdateResourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_evidence_evidence_proto_msgTypes[2]
+	mi := &file_api_evidence_evidence_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -291,7 +408,7 @@ func (x *UpdateResourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateResourceRequest.ProtoReflect.Descriptor instead.
 func (*UpdateResourceRequest) Descriptor() ([]byte, []int) {
-	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{2}
+	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *UpdateResourceRequest) GetResource() *ResourceSnapshot {
@@ -313,7 +430,7 @@ type ListGraphEdgesRequest struct {
 
 func (x *ListGraphEdgesRequest) Reset() {
 	*x = ListGraphEdgesRequest{}
-	mi := &file_api_evidence_evidence_proto_msgTypes[3]
+	mi := &file_api_evidence_evidence_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -325,7 +442,7 @@ func (x *ListGraphEdgesRequest) String() string {
 func (*ListGraphEdgesRequest) ProtoMessage() {}
 
 func (x *ListGraphEdgesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_evidence_evidence_proto_msgTypes[3]
+	mi := &file_api_evidence_evidence_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -338,7 +455,7 @@ func (x *ListGraphEdgesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListGraphEdgesRequest.ProtoReflect.Descriptor instead.
 func (*ListGraphEdgesRequest) Descriptor() ([]byte, []int) {
-	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{3}
+	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListGraphEdgesRequest) GetPageSize() int32 {
@@ -379,7 +496,7 @@ type ListGraphEdgesResponse struct {
 
 func (x *ListGraphEdgesResponse) Reset() {
 	*x = ListGraphEdgesResponse{}
-	mi := &file_api_evidence_evidence_proto_msgTypes[4]
+	mi := &file_api_evidence_evidence_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -391,7 +508,7 @@ func (x *ListGraphEdgesResponse) String() string {
 func (*ListGraphEdgesResponse) ProtoMessage() {}
 
 func (x *ListGraphEdgesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_evidence_evidence_proto_msgTypes[4]
+	mi := &file_api_evidence_evidence_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -404,7 +521,7 @@ func (x *ListGraphEdgesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListGraphEdgesResponse.ProtoReflect.Descriptor instead.
 func (*ListGraphEdgesResponse) Descriptor() ([]byte, []int) {
-	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{4}
+	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListGraphEdgesResponse) GetEdges() []*GraphEdge {
@@ -433,7 +550,7 @@ type GraphEdge struct {
 
 func (x *GraphEdge) Reset() {
 	*x = GraphEdge{}
-	mi := &file_api_evidence_evidence_proto_msgTypes[5]
+	mi := &file_api_evidence_evidence_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -445,7 +562,7 @@ func (x *GraphEdge) String() string {
 func (*GraphEdge) ProtoMessage() {}
 
 func (x *GraphEdge) ProtoReflect() protoreflect.Message {
-	mi := &file_api_evidence_evidence_proto_msgTypes[5]
+	mi := &file_api_evidence_evidence_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -458,7 +575,7 @@ func (x *GraphEdge) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GraphEdge.ProtoReflect.Descriptor instead.
 func (*GraphEdge) Descriptor() ([]byte, []int) {
-	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{5}
+	return file_api_evidence_evidence_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GraphEdge) GetId() string {
@@ -493,14 +610,24 @@ var File_api_evidence_evidence_proto protoreflect.FileDescriptor
 
 const file_api_evidence_evidence_proto_rawDesc = "" +
 	"\n" +
-	"\x1bapi/evidence/evidence.proto\x12\x16confirmate.evidence.v1\x1a4policies/security-metrics/ontology/v1/ontology.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x13tagger/tagger.proto\"\xc1\x04\n" +
+	"\x1bapi/evidence/evidence.proto\x12\x16confirmate.evidence.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a4policies/security-metrics/ontology/v1/ontology.proto\x1a\x13tagger/tagger.proto\"\xc1\x04\n" +
 	"\bEvidence\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\xa9\x01\n" +
 	"\ttimestamp\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampBo\xbaH\x03\xc8\x01\x01\x9a\x84\x9e\x03dgorm:\"serializer:timestamppb;type:timestamp;index:idx_evidences_tool_timestamp,priority:2,sort:desc\"R\ttimestamp\x12P\n" +
 	"\x17target_of_evaluation_id\x18\x03 \x01(\tB\x19\xbaH\x05r\x03\xb0\x01\x01\x9a\x84\x9e\x03\fgorm:\"index\"R\x14targetOfEvaluationId\x12Y\n" +
 	"\atool_id\x18\x04 \x01(\tB@\xbaH\x04r\x02\x10\x01\x9a\x84\x9e\x034gorm:\"index:idx_evidences_tool_timestamp,priority:1\"R\x06toolId\x12Y\n" +
 	"\bresource\x18\x06 \x01(\v2 .confirmate.ontology.v1.ResourceB\x1b\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\bresource\x12g\n" +
-	"!experimental_related_resource_ids\x18\xe7\a \x03(\tB\x1b\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\x1eexperimentalRelatedResourceIds\"\xb4\x02\n" +
+	"!experimental_related_resource_ids\x18\xe7\a \x03(\tB\x1b\x9a\x84\x9e\x03\x16gorm:\"serializer:json\"R\x1eexperimentalRelatedResourceIds\"\xa5\x03\n" +
+	"\x11EvidenceEncrypted\x12\x18\n" +
+	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	"\ttimestamp\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\ttimestamp\x12?\n" +
+	"\x17target_of_evaluation_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x14targetOfEvaluationId\x12 \n" +
+	"\atool_id\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06toolId\x123\n" +
+	"\bresource\x18\x05 \x01(\v2\x17.google.protobuf.StructR\bresource\x12/\n" +
+	"\x0eresource_types\x18\x06 \x03(\tB\b\xbaH\x05\x92\x01\x02\b\x01R\rresourceTypes\x12\x1f\n" +
+	"\vresource_id\x18\a \x01(\tR\n" +
+	"resourceId\x12J\n" +
+	"!experimental_related_resource_ids\x18\xe7\a \x03(\tR\x1eexperimentalRelatedResourceIds\"\xb4\x02\n" +
 	"\x10ResourceSnapshot\x12\x1a\n" +
 	"\x02id\x18\x01 \x01(\tB\n" +
 	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x02id\x12S\n" +
@@ -546,32 +673,36 @@ func file_api_evidence_evidence_proto_rawDescGZIP() []byte {
 	return file_api_evidence_evidence_proto_rawDescData
 }
 
-var file_api_evidence_evidence_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_api_evidence_evidence_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_api_evidence_evidence_proto_goTypes = []any{
 	(*Evidence)(nil),               // 0: confirmate.evidence.v1.Evidence
-	(*ResourceSnapshot)(nil),       // 1: confirmate.evidence.v1.ResourceSnapshot
-	(*UpdateResourceRequest)(nil),  // 2: confirmate.evidence.v1.UpdateResourceRequest
-	(*ListGraphEdgesRequest)(nil),  // 3: confirmate.evidence.v1.ListGraphEdgesRequest
-	(*ListGraphEdgesResponse)(nil), // 4: confirmate.evidence.v1.ListGraphEdgesResponse
-	(*GraphEdge)(nil),              // 5: confirmate.evidence.v1.GraphEdge
-	(*timestamppb.Timestamp)(nil),  // 6: google.protobuf.Timestamp
-	(*ontology.Resource)(nil),      // 7: confirmate.ontology.v1.Resource
+	(*EvidenceEncrypted)(nil),      // 1: confirmate.evidence.v1.EvidenceEncrypted
+	(*ResourceSnapshot)(nil),       // 2: confirmate.evidence.v1.ResourceSnapshot
+	(*UpdateResourceRequest)(nil),  // 3: confirmate.evidence.v1.UpdateResourceRequest
+	(*ListGraphEdgesRequest)(nil),  // 4: confirmate.evidence.v1.ListGraphEdgesRequest
+	(*ListGraphEdgesResponse)(nil), // 5: confirmate.evidence.v1.ListGraphEdgesResponse
+	(*GraphEdge)(nil),              // 6: confirmate.evidence.v1.GraphEdge
+	(*timestamppb.Timestamp)(nil),  // 7: google.protobuf.Timestamp
+	(*ontology.Resource)(nil),      // 8: confirmate.ontology.v1.Resource
+	(*structpb.Struct)(nil),        // 9: google.protobuf.Struct
 }
 var file_api_evidence_evidence_proto_depIdxs = []int32{
-	6, // 0: confirmate.evidence.v1.Evidence.timestamp:type_name -> google.protobuf.Timestamp
-	7, // 1: confirmate.evidence.v1.Evidence.resource:type_name -> confirmate.ontology.v1.Resource
-	7, // 2: confirmate.evidence.v1.ResourceSnapshot.resource:type_name -> confirmate.ontology.v1.Resource
-	1, // 3: confirmate.evidence.v1.UpdateResourceRequest.resource:type_name -> confirmate.evidence.v1.ResourceSnapshot
-	5, // 4: confirmate.evidence.v1.ListGraphEdgesResponse.edges:type_name -> confirmate.evidence.v1.GraphEdge
-	2, // 5: confirmate.evidence.v1.Resources.UpdateResource:input_type -> confirmate.evidence.v1.UpdateResourceRequest
-	3, // 6: confirmate.evidence.v1.Resources.ListGraphEdges:input_type -> confirmate.evidence.v1.ListGraphEdgesRequest
-	1, // 7: confirmate.evidence.v1.Resources.UpdateResource:output_type -> confirmate.evidence.v1.ResourceSnapshot
-	4, // 8: confirmate.evidence.v1.Resources.ListGraphEdges:output_type -> confirmate.evidence.v1.ListGraphEdgesResponse
-	7, // [7:9] is the sub-list for method output_type
-	5, // [5:7] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	7, // 0: confirmate.evidence.v1.Evidence.timestamp:type_name -> google.protobuf.Timestamp
+	8, // 1: confirmate.evidence.v1.Evidence.resource:type_name -> confirmate.ontology.v1.Resource
+	7, // 2: confirmate.evidence.v1.EvidenceEncrypted.timestamp:type_name -> google.protobuf.Timestamp
+	9, // 3: confirmate.evidence.v1.EvidenceEncrypted.resource:type_name -> google.protobuf.Struct
+	8, // 4: confirmate.evidence.v1.ResourceSnapshot.resource:type_name -> confirmate.ontology.v1.Resource
+	2, // 5: confirmate.evidence.v1.UpdateResourceRequest.resource:type_name -> confirmate.evidence.v1.ResourceSnapshot
+	6, // 6: confirmate.evidence.v1.ListGraphEdgesResponse.edges:type_name -> confirmate.evidence.v1.GraphEdge
+	3, // 7: confirmate.evidence.v1.Resources.UpdateResource:input_type -> confirmate.evidence.v1.UpdateResourceRequest
+	4, // 8: confirmate.evidence.v1.Resources.ListGraphEdges:input_type -> confirmate.evidence.v1.ListGraphEdgesRequest
+	2, // 9: confirmate.evidence.v1.Resources.UpdateResource:output_type -> confirmate.evidence.v1.ResourceSnapshot
+	5, // 10: confirmate.evidence.v1.Resources.ListGraphEdges:output_type -> confirmate.evidence.v1.ListGraphEdgesResponse
+	9, // [9:11] is the sub-list for method output_type
+	7, // [7:9] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_api_evidence_evidence_proto_init() }
@@ -585,7 +716,7 @@ func file_api_evidence_evidence_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_evidence_evidence_proto_rawDesc), len(file_api_evidence_evidence_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -1,0 +1,58 @@
+// Copyright 2016-2025 Fraunhofer AISEC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package confirmate.fhe.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "confirmate.io/core/api/fhe";
+
+// ValueType specifies the FHE type of the comparison.
+enum ValueType {
+  VALUE_TYPE_UNSPECIFIED = 0;
+  VALUE_TYPE_BOOLEAN = 1;
+  VALUE_TYPE_NUMBER = 2;
+  VALUE_TYPE_STRING = 3;
+}
+
+// Compare is the business-logic service. It evaluates a comparison
+// operator between a plaintext target_value and an encrypted actual_value,
+// returning an encrypted boolean result.
+service Compare {
+  // Compare evaluates the comparison and returns an encrypted boolean.
+  rpc Compare(CompareRequest) returns (CompareResponse) {}
+}
+
+message CompareRequest {
+  // Operator: one of <, >, <=, >=, ==, isIn, allIn.
+  // isIn and allIn are not yet implemented and return UNIMPLEMENTED.
+  string operator = 1 [(buf.validate.field).string.min_len = 1];
+
+  // Plaintext, non-secret target value (e.g. "42", "true").
+  string target_value = 2;
+
+  // Serialized FHE ciphertext of the actual value (encrypted by the proxy
+  // with the ClientKey using tfhe::safe_serialization).
+  bytes actual_value = 3;
+
+  // The FHE type of the comparison.
+  ValueType value_type = 4;
+}
+
+message CompareResponse {
+  // Serialized FheBool result (encrypted boolean).
+  bytes result = 1;
+}
