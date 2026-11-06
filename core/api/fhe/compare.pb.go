@@ -16,7 +16,7 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        (unknown)
-// source: api/fhe/evaluator.proto
+// source: api/fhe/compare.proto
 
 package fhe
 
@@ -73,11 +73,11 @@ func (x ValueType) String() string {
 }
 
 func (ValueType) Descriptor() protoreflect.EnumDescriptor {
-	return file_api_fhe_evaluator_proto_enumTypes[0].Descriptor()
+	return file_api_fhe_compare_proto_enumTypes[0].Descriptor()
 }
 
 func (ValueType) Type() protoreflect.EnumType {
-	return &file_api_fhe_evaluator_proto_enumTypes[0]
+	return &file_api_fhe_compare_proto_enumTypes[0]
 }
 
 func (x ValueType) Number() protoreflect.EnumNumber {
@@ -86,10 +86,10 @@ func (x ValueType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ValueType.Descriptor instead.
 func (ValueType) EnumDescriptor() ([]byte, []int) {
-	return file_api_fhe_evaluator_proto_rawDescGZIP(), []int{0}
+	return file_api_fhe_compare_proto_rawDescGZIP(), []int{0}
 }
 
-type EvaluatorRequest struct {
+type CompareRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Operator: one of <, >, <=, >=, ==, isIn, allIn.
 	// isIn and allIn are not yet implemented and return UNIMPLEMENTED.
@@ -105,21 +105,21 @@ type EvaluatorRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *EvaluatorRequest) Reset() {
-	*x = EvaluatorRequest{}
-	mi := &file_api_fhe_evaluator_proto_msgTypes[0]
+func (x *CompareRequest) Reset() {
+	*x = CompareRequest{}
+	mi := &file_api_fhe_compare_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *EvaluatorRequest) String() string {
+func (x *CompareRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EvaluatorRequest) ProtoMessage() {}
+func (*CompareRequest) ProtoMessage() {}
 
-func (x *EvaluatorRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_fhe_evaluator_proto_msgTypes[0]
+func (x *CompareRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_fhe_compare_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -130,40 +130,40 @@ func (x *EvaluatorRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use EvaluatorRequest.ProtoReflect.Descriptor instead.
-func (*EvaluatorRequest) Descriptor() ([]byte, []int) {
-	return file_api_fhe_evaluator_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use CompareRequest.ProtoReflect.Descriptor instead.
+func (*CompareRequest) Descriptor() ([]byte, []int) {
+	return file_api_fhe_compare_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *EvaluatorRequest) GetOperator() string {
+func (x *CompareRequest) GetOperator() string {
 	if x != nil {
 		return x.Operator
 	}
 	return ""
 }
 
-func (x *EvaluatorRequest) GetTargetValue() string {
+func (x *CompareRequest) GetTargetValue() string {
 	if x != nil {
 		return x.TargetValue
 	}
 	return ""
 }
 
-func (x *EvaluatorRequest) GetActualValue() []byte {
+func (x *CompareRequest) GetActualValue() []byte {
 	if x != nil {
 		return x.ActualValue
 	}
 	return nil
 }
 
-func (x *EvaluatorRequest) GetValueType() ValueType {
+func (x *CompareRequest) GetValueType() ValueType {
 	if x != nil {
 		return x.ValueType
 	}
 	return ValueType_VALUE_TYPE_UNSPECIFIED
 }
 
-type EvaluatorResponse struct {
+type CompareResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Serialized FheBool result (encrypted boolean).
 	Result        []byte `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
@@ -171,21 +171,21 @@ type EvaluatorResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *EvaluatorResponse) Reset() {
-	*x = EvaluatorResponse{}
-	mi := &file_api_fhe_evaluator_proto_msgTypes[1]
+func (x *CompareResponse) Reset() {
+	*x = CompareResponse{}
+	mi := &file_api_fhe_compare_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *EvaluatorResponse) String() string {
+func (x *CompareResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EvaluatorResponse) ProtoMessage() {}
+func (*CompareResponse) ProtoMessage() {}
 
-func (x *EvaluatorResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_fhe_evaluator_proto_msgTypes[1]
+func (x *CompareResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_fhe_compare_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -196,62 +196,62 @@ func (x *EvaluatorResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use EvaluatorResponse.ProtoReflect.Descriptor instead.
-func (*EvaluatorResponse) Descriptor() ([]byte, []int) {
-	return file_api_fhe_evaluator_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use CompareResponse.ProtoReflect.Descriptor instead.
+func (*CompareResponse) Descriptor() ([]byte, []int) {
+	return file_api_fhe_compare_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *EvaluatorResponse) GetResult() []byte {
+func (x *CompareResponse) GetResult() []byte {
 	if x != nil {
 		return x.Result
 	}
 	return nil
 }
 
-var File_api_fhe_evaluator_proto protoreflect.FileDescriptor
+var File_api_fhe_compare_proto protoreflect.FileDescriptor
 
-const file_api_fhe_evaluator_proto_rawDesc = "" +
+const file_api_fhe_compare_proto_rawDesc = "" +
 	"\n" +
-	"\x17api/fhe/evaluator.proto\x12\x11confirmate.fhe.v1\x1a\x1bbuf/validate/validate.proto\"\xba\x01\n" +
-	"\x10EvaluatorRequest\x12#\n" +
+	"\x15api/fhe/compare.proto\x12\x11confirmate.fhe.v1\x1a\x1bbuf/validate/validate.proto\"\xb8\x01\n" +
+	"\x0eCompareRequest\x12#\n" +
 	"\boperator\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\boperator\x12!\n" +
 	"\ftarget_value\x18\x02 \x01(\tR\vtargetValue\x12!\n" +
 	"\factual_value\x18\x03 \x01(\fR\vactualValue\x12;\n" +
 	"\n" +
-	"value_type\x18\x04 \x01(\x0e2\x1c.confirmate.fhe.v1.ValueTypeR\tvalueType\"+\n" +
-	"\x11EvaluatorResponse\x12\x16\n" +
+	"value_type\x18\x04 \x01(\x0e2\x1c.confirmate.fhe.v1.ValueTypeR\tvalueType\")\n" +
+	"\x0fCompareResponse\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\fR\x06result*m\n" +
 	"\tValueType\x12\x1a\n" +
 	"\x16VALUE_TYPE_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12VALUE_TYPE_BOOLEAN\x10\x01\x12\x15\n" +
 	"\x11VALUE_TYPE_NUMBER\x10\x02\x12\x15\n" +
-	"\x11VALUE_TYPE_STRING\x10\x032e\n" +
-	"\tEvaluator\x12X\n" +
-	"\tEvaluator\x12#.confirmate.fhe.v1.EvaluatorRequest\x1a$.confirmate.fhe.v1.EvaluatorResponse\"\x00B\x1cZ\x1aconfirmate.io/core/api/fheb\x06proto3"
+	"\x11VALUE_TYPE_STRING\x10\x032]\n" +
+	"\aCompare\x12R\n" +
+	"\aCompare\x12!.confirmate.fhe.v1.CompareRequest\x1a\".confirmate.fhe.v1.CompareResponse\"\x00B\x1cZ\x1aconfirmate.io/core/api/fheb\x06proto3"
 
 var (
-	file_api_fhe_evaluator_proto_rawDescOnce sync.Once
-	file_api_fhe_evaluator_proto_rawDescData []byte
+	file_api_fhe_compare_proto_rawDescOnce sync.Once
+	file_api_fhe_compare_proto_rawDescData []byte
 )
 
-func file_api_fhe_evaluator_proto_rawDescGZIP() []byte {
-	file_api_fhe_evaluator_proto_rawDescOnce.Do(func() {
-		file_api_fhe_evaluator_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_fhe_evaluator_proto_rawDesc), len(file_api_fhe_evaluator_proto_rawDesc)))
+func file_api_fhe_compare_proto_rawDescGZIP() []byte {
+	file_api_fhe_compare_proto_rawDescOnce.Do(func() {
+		file_api_fhe_compare_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_fhe_compare_proto_rawDesc), len(file_api_fhe_compare_proto_rawDesc)))
 	})
-	return file_api_fhe_evaluator_proto_rawDescData
+	return file_api_fhe_compare_proto_rawDescData
 }
 
-var file_api_fhe_evaluator_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_api_fhe_evaluator_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_api_fhe_evaluator_proto_goTypes = []any{
-	(ValueType)(0),            // 0: confirmate.fhe.v1.ValueType
-	(*EvaluatorRequest)(nil),  // 1: confirmate.fhe.v1.EvaluatorRequest
-	(*EvaluatorResponse)(nil), // 2: confirmate.fhe.v1.EvaluatorResponse
+var file_api_fhe_compare_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_api_fhe_compare_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_api_fhe_compare_proto_goTypes = []any{
+	(ValueType)(0),          // 0: confirmate.fhe.v1.ValueType
+	(*CompareRequest)(nil),  // 1: confirmate.fhe.v1.CompareRequest
+	(*CompareResponse)(nil), // 2: confirmate.fhe.v1.CompareResponse
 }
-var file_api_fhe_evaluator_proto_depIdxs = []int32{
-	0, // 0: confirmate.fhe.v1.EvaluatorRequest.value_type:type_name -> confirmate.fhe.v1.ValueType
-	1, // 1: confirmate.fhe.v1.Evaluator.Evaluator:input_type -> confirmate.fhe.v1.EvaluatorRequest
-	2, // 2: confirmate.fhe.v1.Evaluator.Evaluator:output_type -> confirmate.fhe.v1.EvaluatorResponse
+var file_api_fhe_compare_proto_depIdxs = []int32{
+	0, // 0: confirmate.fhe.v1.CompareRequest.value_type:type_name -> confirmate.fhe.v1.ValueType
+	1, // 1: confirmate.fhe.v1.Compare.Compare:input_type -> confirmate.fhe.v1.CompareRequest
+	2, // 2: confirmate.fhe.v1.Compare.Compare:output_type -> confirmate.fhe.v1.CompareResponse
 	2, // [2:3] is the sub-list for method output_type
 	1, // [1:2] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -259,27 +259,27 @@ var file_api_fhe_evaluator_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_api_fhe_evaluator_proto_init() }
-func file_api_fhe_evaluator_proto_init() {
-	if File_api_fhe_evaluator_proto != nil {
+func init() { file_api_fhe_compare_proto_init() }
+func file_api_fhe_compare_proto_init() {
+	if File_api_fhe_compare_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_fhe_evaluator_proto_rawDesc), len(file_api_fhe_evaluator_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_fhe_compare_proto_rawDesc), len(file_api_fhe_compare_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_api_fhe_evaluator_proto_goTypes,
-		DependencyIndexes: file_api_fhe_evaluator_proto_depIdxs,
-		EnumInfos:         file_api_fhe_evaluator_proto_enumTypes,
-		MessageInfos:      file_api_fhe_evaluator_proto_msgTypes,
+		GoTypes:           file_api_fhe_compare_proto_goTypes,
+		DependencyIndexes: file_api_fhe_compare_proto_depIdxs,
+		EnumInfos:         file_api_fhe_compare_proto_enumTypes,
+		MessageInfos:      file_api_fhe_compare_proto_msgTypes,
 	}.Build()
-	File_api_fhe_evaluator_proto = out.File
-	file_api_fhe_evaluator_proto_goTypes = nil
-	file_api_fhe_evaluator_proto_depIdxs = nil
+	File_api_fhe_compare_proto = out.File
+	file_api_fhe_compare_proto_goTypes = nil
+	file_api_fhe_compare_proto_depIdxs = nil
 }

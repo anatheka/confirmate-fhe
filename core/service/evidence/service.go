@@ -54,7 +54,7 @@ var DefaultConfig = Config{
 	PersistenceConfig:    persistence.DefaultConfig,
 	EvidenceQueueSize:    defaultEvidenceQueueSize,
 	FheEnabled:           false,
-	FheAddress:           "http://localhost:8081",
+	FheProxyAddress:      "http://localhost:8081",
 }
 
 // Config represents the configuration for the evidence store [Service].
@@ -79,8 +79,8 @@ type Config struct {
 	// FheEnabled indicates whether FHE (Fully Homomorphic Encryption) is enabled for the service.
 	FheEnabled bool
 
-	// FheAddress is the address of the FHE proxy service.
-	FheAddress string
+	// FheProxyAddress is the address of the FHE proxy service.
+	FheProxyAddress string
 }
 
 // Service is an implementation of the Confirmate req service (evidenceServer)
@@ -155,8 +155,8 @@ func NewService(opts ...service.Option[Service]) (svc *Service, err error) {
 	// If FHE is enabled, redirect assessment calls to the FHE proxy
 	// service. The FHE proxy receives the evidence, encrypts the evidence and forwards the encrypted evidence to the assessment service.
 	if svc.cfg.FheEnabled {
-		slog.Info("FHE is enabled for the evidence store service", slog.String("fhe_address", svc.cfg.FheAddress))
-		svc.cfg.AssessmentAddress = svc.cfg.FheAddress
+		slog.Info("FHE is enabled for the evidence store service", slog.String("FHE Proxy Address", svc.cfg.FheProxyAddress))
+		svc.cfg.AssessmentAddress = svc.cfg.FheProxyAddress
 	}
 
 	// Initialize the assessment service client

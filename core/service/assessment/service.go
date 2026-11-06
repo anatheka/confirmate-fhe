@@ -55,6 +55,7 @@ var DefaultConfig = Config{
 	SkipMetricsOnError:     false,
 	CacheApplicableMetrics: false,
 	FheEnabled:             false,
+	FheEvaluatorAddress:    "localhost:8082",
 }
 
 // Config represents the configuration for the assessment [Service].
@@ -79,10 +80,13 @@ type Config struct {
 	CacheApplicableMetrics bool
 	// FheEnabled indicates whether FHE (Fully Homomorphic Encryption) is enabled for the service.
 	FheEnabled bool
-	// FheAddress is the address of the FHE proxy service.
-	FheAddress string
-	// FheHTTPClient is the HTTP client used for communication with the FHE proxy service.
-	FheHTTPClient *http.Client
+	// FheEvaluatorAddress is the address of the HE evaluator service. The
+	// assessment service uses this to call the Compare gRPC service for
+	// encrypted comparison.
+	FheEvaluatorAddress string
+	// FheEvaluatorHTTPClient is the HTTP client used for communication with
+	// the HE evaluator service. Only used when FheEnabled is true.
+	FheEvaluatorHTTPClient *http.Client
 }
 
 const (
@@ -138,15 +142,15 @@ type Service struct {
 	// pe contains the actual policy evaluation engine we use
 	pe policies.PolicyEval
 
+	// fheCompareClient is the gRPC client for the HE evaluator's Compare
+	// service. Only used when FheEnabled is true.
+	fheCompareClient fheconnect.CompareClient
+
 	// authz defines our authorization strategy for target-of-evaluation scoped access.
 	authz service.AuthorizationStrategy
 
 	// cfg contains the service configuration
 	cfg Config
-
-	// fheCompareClient is the gRPC client for the FHE proxy Compare service.
-	// Only used when FheEnabled is true.
-	fheCompareClient fheconnect.CompareClient
 
 	// subscribers is a map of subscribers for metric change events
 	subscribers      map[int64]*subscriber
@@ -225,14 +229,14 @@ func NewService(opts ...service.Option[Service]) (handler assessmentconnect.Asse
 		return nil, err
 	}
 
-	// If FHE is enabled, create the Compare client for the FHE proxy service.
+	// If FHE is enabled, create the Compare client for the HE evaluator service.
 	if svc.cfg.FheEnabled {
-		slog.Info("FHE is enabled for the assessment service", slog.String("fhe_address", svc.cfg.FheAddress))
-		fheHTTPClient := svc.cfg.FheHTTPClient
+		slog.Info("FHE is enabled for the assessment service", slog.String("fhe_evaluator_address", svc.cfg.FheEvaluatorAddress))
+		fheHTTPClient := svc.cfg.FheEvaluatorHTTPClient
 		if fheHTTPClient == nil {
 			fheHTTPClient = service.DefaultHTTPClient
 		}
-		svc.fheCompareClient = fheconnect.NewCompareClient(fheHTTPClient, svc.cfg.FheAddress)
+		svc.fheCompareClient = fheconnect.NewCompareClient(fheHTTPClient, svc.cfg.FheEvaluatorAddress, connect.WithGRPC())
 	}
 
 	slog.Info("Orchestrator URL is set", slog.String("orchestrator_url", svc.cfg.OrchestratorAddress))

@@ -2045,6 +2045,9 @@ components:
                     items:
                         type: string
                     description: The resource types (plaintext, for metric applicability checks).
+                resourceId:
+                    type: string
+                    description: The resource ID (plaintext, used to link assessment results to the resource).
                 experimentalRelatedResourceIds:
                     type: array
                     items:

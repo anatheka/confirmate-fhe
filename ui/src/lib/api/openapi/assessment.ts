@@ -1236,22 +1236,16 @@ export interface components {
          *      {"machineLearningModel": {"adversarialRobustnessScore": "<ciphertext>", ...}}.
          */
         EvidenceEncrypted: {
-            /** @description The ID of the evidence. */
+            /** @description The ID of the evidence (plaintext). */
             id?: string;
             /**
              * Format: date-time
-             * @description Time of evidence creation (plaintext, for temporal ordering).
+             * @description Time of evidence creation (plaintext).
              */
             timestamp?: string;
-            /**
-             * @description Reference to a target of evaluation (plaintext, needed for metric
-             *      configuration lookup).
-             */
+            /** @description Reference to a target of evaluation (plaintext). */
             targetOfEvaluationId?: string;
-            /**
-             * @description Reference to the tool which provided the evidence (plaintext, needed for
-             *      metric applicability).
-             */
+            /** @description Reference to the tool which provided the evidence (plaintext). */
             toolId?: string;
             /**
              * @description The encrypted resource as a Struct that mirrors the ontology resource
@@ -1261,9 +1255,9 @@ export interface components {
             resource?: Record<string, never>;
             /** @description The resource types (plaintext, for metric applicability checks). */
             resourceTypes?: string[];
-            /** @description The resource ID (plaintext, for reference in assessment results). */
+            /** @description The resource ID (plaintext, used to link assessment results to the resource). */
             resourceId?: string;
-            /** @description Related resource IDs (plaintext, for dependency resolution). */
+            /** @description Related resource IDs (plaintext). */
             experimentalRelatedResourceIds?: string[];
         };
         /**
